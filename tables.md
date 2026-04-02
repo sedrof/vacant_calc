@@ -1,6 +1,6 @@
 So here are the tables we are gonna use from the lakehouse
 
-1- FROM [T1_Evolve].[ev].[Property]
+1- FROM [ev].[Property]
 
     SELECT TOP (100) [DataSet.PROPERTYID],
 			[DataSet.ENGAGEMENTID],
@@ -288,7 +288,7 @@ So here are the tables we are gonna use from the lakehouse
 			[Messages]
 
 
-2- FROM [T1_Evolve].[ev].[Tenancy]
+2- FROM [ev].[Tenancy]
     SELECT TOP (100) [DataSet.TENANCYID],
 			[DataSet.TENANCYREFERENCE],
 			[DataSet.ACTIVECODE],
@@ -362,7 +362,7 @@ So here are the tables we are gonna use from the lakehouse
 			[DataSet.EVICTION_REASON],
 			[data.EVICTION_REASON]
 
-3- FROM [T1_Evolve].[ev].[Void]
+3- FROM [ev].[Void]
     SELECT TOP (100) [DataSet.VOID_ID],
 			[DataSet.PROPERTY_VOID],
 			[DataSet.CURRENT_STAGE],
@@ -389,7 +389,7 @@ So here are the tables we are gonna use from the lakehouse
 			[Key],
 			[Messages]
 
-4- FROM [T1_Evolve].[ev].[Resident_Data]
+4- FROM [ev].[Resident_Data]
     SELECT TOP (100) [DataSet.CONTACT_ID],
 			[DataSet.TENANT],
 			[DataSet.APPLICANT],
@@ -430,7 +430,7 @@ So here are the tables we are gonna use from the lakehouse
 			[Key],
 			[Messages]
 
-5- FROM [T1_Evolve].[ev].[Keys]
+5- FROM [ev].[Keys]
 	SELECT TOP (100) [DataSet.KEY_ID],
 			[DataSet.ENGAGEMENT_BASETYPE],
 			[DataSet.ENGAGEMENT_TYPE],
@@ -474,3 +474,6 @@ So here are the tables we are gonna use from the lakehouse
 			[TotalRecordCount],
 			[Key],
 			[Messages]
+
+
+WAREHOUSE_PREFIX = "`Evolve-TechOne`.Shortcut.ev"

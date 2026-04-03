@@ -35,6 +35,16 @@ The workbook establishes the most important date rules:
 4. Void periods are a subset of the vacancy period.
 5. `Tenantable Days` are vacancy days that are not in a void period.
 
+The workbook does not count the start boundary day in `Vac days`.
+
+Example:
+
+- vacancy start boundary = `2026-01-02`
+- report to date = `2026-03-31`
+- workbook `Vac days` = `2026-03-31 - 2026-01-02 = 88`
+
+That is the behavior the notebook now follows.
+
 To make the solution stable in Fabric, the notebook stores the end boundary as an exclusive date:
 
 - user-facing inclusive end example: `2026-04-04`
@@ -55,6 +65,10 @@ The active values published for reporting are stored in:
 - `vacancy_reporting.dim_active_vacancy_rule_parameters`
 
 This allows controlled changes without editing the report each time a date correction rule changes.
+
+The recommended maintenance path is the Fabric notebook script:
+
+- `../vacancy_rule_parameter_maintenance_notebook.py`
 
 ## Required Output
 
@@ -111,7 +125,7 @@ These decisions are intentional and should not be changed without evidence:
 
 Use this order for implementation:
 
-1. Review this overview and `docs/tables.md`.
+1. Review this overview and `tables.md`.
 2. Run the notebook in Fabric.
 3. Validate the config table and active rule values.
 4. Build the semantic model.
@@ -136,7 +150,3 @@ The project is successful when:
 - the report is auditable at vacancy-day level,
 - the report supports exportable operational detail,
 - the process can be rerun without manual recalculation.
-
-
-but 93 means we exceeded the quartely ? since we have this formula on the excel for Vac days `=MIN(O8,M2)-N8`  O8=`04/04/2026`, M2=`31/03/2026`,
-  N8=`02/01/2026` and the Vac days = 88. because we have Report to date 31/03/2026

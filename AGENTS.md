@@ -14,7 +14,7 @@ Before changing anything, read these files in this order:
 
 If the task is about date corrections or source timing issues, also read:
 
-- `docs/sql/vacancy_rule_parameter_maintenance.sql`
+- `vacancy_rule_parameter_maintenance_notebook.py`
 
 If the task is about notebook logic, use:
 

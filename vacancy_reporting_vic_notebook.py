@@ -182,6 +182,7 @@ snapshot_end_exclusive = (
     if AS_AT_DATE is None
     else F.date_add(F.to_date(F.lit(AS_AT_DATE)), 1)
 )
+EMPTY_DATE_ARRAY = F.expr("cast(array() as array<date>)")
 
 
 property_columns = [
@@ -505,7 +506,10 @@ vacancy_intervals = (
     )
     .withColumn(
         "full_vacancy_days",
-        F.datediff(F.col("vacancy_end_exclusive"), F.col("vacancy_start_date")),
+        F.greatest(
+            F.datediff(F.col("vacancy_end_exclusive"), F.col("vacancy_start_date")) - 1,
+            F.lit(0),
+        ),
     )
     .withColumn("is_open_vacancy", F.col("vacancy_end_tenancy_id").isNull())
     .withColumn("report_state", F.lit(TARGET_STATE))
@@ -544,15 +548,19 @@ vacancy_days = (
         "report_state",
     )
     .withColumn(
-        "vacancy_date",
-        F.explode(
+        "vacancy_date_array",
+        F.when(
+            F.date_add(F.col("vacancy_start_date"), 1)
+            <= F.date_sub(F.col("vacancy_end_exclusive"), 1),
             F.sequence(
-                F.col("vacancy_start_date"),
+                F.date_add(F.col("vacancy_start_date"), 1),
                 F.date_sub(F.col("vacancy_end_exclusive"), 1),
                 F.expr("interval 1 day"),
             )
-        ),
+        ).otherwise(EMPTY_DATE_ARRAY),
     )
+    .withColumn("vacancy_date", F.explode("vacancy_date_array"))
+    .drop("vacancy_date_array")
 )
 
 void_days = (
@@ -565,14 +573,20 @@ void_days = (
         "property_condition_code",
         "property_condition",
         "key_register_engagement_id",
-        F.explode(
+        F.when(
+            F.date_add(F.col("void_start_date"), 1)
+            <= F.date_sub(F.col("void_end_exclusive"), 1),
             F.sequence(
-                F.col("void_start_date"),
+                F.date_add(F.col("void_start_date"), 1),
                 F.date_sub(F.col("void_end_exclusive"), 1),
                 F.expr("interval 1 day"),
             )
-        ).alias("vacancy_date"),
+        )
+        .otherwise(EMPTY_DATE_ARRAY)
+        .alias("vacancy_date_array"),
     )
+    .withColumn("vacancy_date", F.explode("vacancy_date_array"))
+    .drop("vacancy_date_array")
     .dropDuplicates(["property_id", "vacancy_date", "void_id"])
 )
 
@@ -628,8 +642,24 @@ vacancy_day_fact = (
 )
 
 
-fact_vacancy_interval_vic = (
+vacancy_day_metrics = (
     vacancy_day_fact.groupBy(
+        "vacancy_id"
+    )
+    .agg(
+        F.sum("vacancy_day_count").alias("full_vacancy_days_from_day_fact"),
+        F.sum("tenantable_day_count").alias("full_tenantable_days"),
+        F.sum("untenantable_day_count").alias("full_untenantable_days"),
+        F.sum("other_day_count").alias("full_other_days"),
+        F.min("vacancy_date").alias("first_vacancy_date"),
+        F.max("vacancy_date").alias("last_vacancy_date"),
+        F.countDistinct("void_id").alias("void_record_count"),
+    )
+)
+
+
+fact_vacancy_interval_vic = (
+    vacancy_intervals.select(
         "vacancy_id",
         "property_id",
         "property_number",
@@ -646,16 +676,21 @@ fact_vacancy_interval_vic = (
         "vacancy_start_tenancy_id",
         "vacancy_end_tenancy_id",
         "report_state",
+        "full_vacancy_days",
     )
-    .agg(
-        F.sum("vacancy_day_count").alias("full_vacancy_days"),
-        F.sum("tenantable_day_count").alias("full_tenantable_days"),
-        F.sum("untenantable_day_count").alias("full_untenantable_days"),
-        F.sum("other_day_count").alias("full_other_days"),
-        F.min("vacancy_date").alias("first_vacancy_date"),
-        F.max("vacancy_date").alias("last_vacancy_date"),
-        F.countDistinct("void_id").alias("void_record_count"),
+    .join(vacancy_day_metrics, "vacancy_id", "left")
+    .withColumn(
+        "full_vacancy_days",
+        F.coalesce(F.col("full_vacancy_days_from_day_fact"), F.col("full_vacancy_days")),
     )
+    .withColumn("full_tenantable_days", F.coalesce(F.col("full_tenantable_days"), F.lit(0)))
+    .withColumn(
+        "full_untenantable_days",
+        F.coalesce(F.col("full_untenantable_days"), F.lit(0)),
+    )
+    .withColumn("full_other_days", F.coalesce(F.col("full_other_days"), F.lit(0)))
+    .withColumn("void_record_count", F.coalesce(F.col("void_record_count"), F.lit(0)))
+    .drop("full_vacancy_days_from_day_fact")
     .withColumn("meets_21_day_benchmark", F.col("full_vacancy_days") <= 21)
     .withColumn("meets_48_day_benchmark", F.col("full_vacancy_days") <= 48)
 )

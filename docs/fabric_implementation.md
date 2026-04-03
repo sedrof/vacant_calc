@@ -23,9 +23,9 @@ Documentation:
 - `report_pages.md`
 - `tables.md`
 
-SQL maintenance script:
+Parameter maintenance notebook:
 
-- `sql/vacancy_rule_parameter_maintenance.sql`
+- `../vacancy_rule_parameter_maintenance_notebook.py`
 
 ## Step 1: Review The Inputs
 
@@ -68,7 +68,17 @@ Review the active date-correction rules before building the semantic model.
 
 Use:
 
-- `sql/vacancy_rule_parameter_maintenance.sql`
+- `../vacancy_rule_parameter_maintenance_notebook.py`
+
+Recommended notebook flow:
+
+1. Start with `ACTION = "view_active"`.
+2. Review the current active rules.
+3. Prepare `RULE_UPDATES`.
+4. Change `ACTION` to `"apply_rule_updates"`.
+5. Set `EXECUTE_CHANGES = True`.
+6. Run the maintenance notebook.
+7. Rerun `../vacancy_reporting_vic_notebook.py`.
 
 The key rules are:
 
@@ -81,6 +91,7 @@ Expected default behavior:
 
 - tenancy end `2026-01-01` becomes vacancy start `2026-01-02`
 - next tenancy start `2026-04-05` becomes vacancy inclusive end `2026-04-04`
+- workbook `Vac days` for a report ending `2026-03-31` becomes `88`, because the workbook formula is `MIN(vacancy_end, report_to_date) - vacancy_start`
 
 If the business wants different offsets, change the config table first and rerun the notebook.
 
@@ -93,6 +104,8 @@ Before moving to the semantic model, validate the outputs with a small set of ex
 3. Confirm `Other Days = 0` in the current version.
 4. Confirm properties with no earlier tenancy can still produce an initial vacancy.
 5. Confirm open vacancies use the notebook snapshot boundary.
+6. Confirm a workbook example such as `2026-01-02` to `2026-03-31` returns `88` vacancy days, not `89`.
+7. Confirm the active rules displayed in `dim_active_vacancy_rule_parameters` match the intended maintenance change.
 
 If any of these checks fail, stop there and fix the notebook before continuing.
 
@@ -124,8 +137,8 @@ The report is operational and regulatory. Keep the layout clear and export-frien
 
 Use this order whenever source data or rule parameters change:
 
-1. Update `vacancy_reporting.cfg_vacancy_rule_parameters` if required.
-2. Run the notebook.
+1. Run `../vacancy_rule_parameter_maintenance_notebook.py` if a parameter change is required.
+2. Run `../vacancy_reporting_vic_notebook.py`.
 3. Refresh the semantic model.
 4. Validate the report outputs.
 

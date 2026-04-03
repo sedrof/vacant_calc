@@ -43,6 +43,13 @@ The report filters by date range. If date filtering only touches the interval ta
 
 Using `fact_vacancy_day_vic` as the main fact solves that problem because every day in the selected range is explicit.
 
+Important counting note:
+
+- the workbook logic excludes the vacancy start boundary day from `Vacancy Days`,
+- the notebook matches that behavior,
+- so selected-period vacancy days align with the workbook formula `MIN(end_date, report_to_date) - start_date`.
+- if the report is filtered to `2026-03-31`, a vacancy starting on `2026-01-02` contributes `88` days, not `89`.
+
 ## Calendar Table
 
 Create this table:
@@ -191,6 +198,7 @@ Hide technical columns such as codes, join keys that users do not need, and inte
 - Use measures from `fact_vacancy_day_vic` on any page that must respect the selected date range.
 - Treat the `full_*` columns in `fact_vacancy_interval_vic` as lifetime interval totals, not selected-period totals.
 - Label `vacancy_end_exclusive` clearly in the report so users do not mistake it for a plain inclusive end date.
+- Keep `dim_active_vacancy_rule_parameters` disconnected and visible for governance only.
 
 ## Filter Mapping
 

@@ -50,6 +50,10 @@ Add visuals:
   - `[Pct <= 21 Days]`
   - `[Pct <= 48 Days]`
 
+Page note:
+
+- `Vacancy Days` follows workbook counting logic and excludes the vacancy start boundary day.
+
 ## Page 2: Vacancy Detail
 
 Purpose:
@@ -140,3 +144,4 @@ Add a note:
 - Keep the detail page export-friendly.
 - Keep the audit page plain and readable.
 - Add a tooltip or text note that the vacancy logic follows `Vacant Calc.xlsx`.
+- After any parameter change, rerun the main notebook and refresh the semantic model before relying on report output.

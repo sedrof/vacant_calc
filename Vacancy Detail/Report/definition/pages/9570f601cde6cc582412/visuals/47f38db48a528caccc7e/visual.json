@@ -1,0 +1,77 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.8.0/schema.json",
+  "name": "47f38db48a528caccc7e",
+  "position": {
+    "x": 322.76885043263286,
+    "y": 0,
+    "z": 2000,
+    "height": 92.2558714462299,
+    "width": 280.04944375772556,
+    "tabOrder": 2000
+  },
+  "visual": {
+    "visualType": "slicer",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_property_vic"
+                    }
+                  },
+                  "Property": "entity"
+                }
+              },
+              "queryRef": "dim_property_vic.entity",
+              "nativeQueryRef": "entity",
+              "active": true
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "data": [
+        {
+          "properties": {
+            "mode": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Dropdown'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "syncGroup": {
+      "groupName": "entity",
+      "fieldChanges": true,
+      "filterChanges": true
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "3cceeb8ab553fb3c7d3d",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_property_vic"
+              }
+            },
+            "Property": "entity"
+          }
+        },
+        "type": "Categorical"
+      }
+    ]
+  }
+}

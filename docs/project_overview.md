@@ -96,6 +96,7 @@ The report must also support these main filters:
 The implementation uses:
 
 - a Fabric notebook to build the reporting tables,
+- an existing shared `dim_date` table for date filtering,
 - a semantic model on top of those tables,
 - a Power BI report with summary, detail, audit, and config views.
 
@@ -117,7 +118,8 @@ The notebook creates these reporting tables:
 These decisions are intentional and should not be changed without evidence:
 
 - `Resident_Data` is not part of the first vacancy calculation build because it is not needed for the current logic.
-- `Keys` is staged only. It is not related into the main model until the engagement mapping is confirmed.
+- `Keys.PARENT_ENGAGEMENT_ID` is confirmed as `property_id`.
+- The vacancy interval output includes overlapping void start/end values and a representative keys row per vacancy.
 - `Other Days` remains `0` because no valid source rule has been confirmed.
 - `Property Program` is currently used as `Property Source`.
 
@@ -138,7 +140,6 @@ These items still require business confirmation before expansion:
 
 - The exact rule for `Other Days`
 - Whether any source tables need a permanent raw date shift
-- How `Keys.PARENT_ENGAGEMENT_ID` should map to vacancy or property events
 - Whether `Property Program` is definitively the right field for `Property Source`
 
 ## Success Criteria

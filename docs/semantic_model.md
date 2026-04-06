@@ -13,35 +13,36 @@ For that reason, the daily fact table is the center of the model.
 
 Load these tables from Fabric:
 
+- `` `Evolve-TechOne`.Shortcut.dbo.dim_date ``
 - `vacancy_reporting.dim_property_vic`
 - `vacancy_reporting.dim_active_vacancy_rule_parameters`
 - `vacancy_reporting.fact_vacancy_day_vic`
 - `vacancy_reporting.fact_vacancy_interval_vic`
 - `vacancy_reporting.fact_void_interval_vic`
 
-Create one DAX calendar table in the semantic model.
-
 ## Recommended Relationships
 
 Create these relationships:
 
-- `Dim Date[Date]` 1:* `fact_vacancy_day_vic[vacancy_date]`
-- `dim_property_vic[property_id]` 1:* `fact_vacancy_day_vic[property_id]`
+- `dim_date[date]` 1:* `fact_vacancy_day_vic[vacancy_date]`
 - `dim_property_vic[property_id]` 1:* `fact_vacancy_interval_vic[property_id]`
 - `fact_vacancy_interval_vic[vacancy_id]` 1:* `fact_vacancy_day_vic[vacancy_id]`
 
 Relationship settings:
 
-- Use `Both` cross-filter direction only on `fact_vacancy_interval_vic[vacancy_id]` to `fact_vacancy_day_vic[vacancy_id]`.
+- Do not create a direct active relationship from `dim_property_vic[property_id]` to `fact_vacancy_day_vic[property_id]`.
+- Use `Both` cross-filter direction on `fact_vacancy_interval_vic[vacancy_id]` to `fact_vacancy_day_vic[vacancy_id]`.
 - Keep all other relationships single direction.
 - Do not relate `dim_active_vacancy_rule_parameters` to the rest of the model. It is a display and governance table.
-- Do not activate a `Keys` relationship yet.
+- Do not create a separate active relationship to `stg_keys_vic` for the report model. Keys fields are already embedded into `fact_vacancy_interval_vic`.
 
 ## Why The Model Is Built This Way
 
 The report filters by date range. If date filtering only touches the interval table, partial-period calculations become unreliable.
 
 Using `fact_vacancy_day_vic` as the main fact solves that problem because every day in the selected range is explicit.
+
+To avoid ambiguous filter paths, `dim_property_vic` should filter `fact_vacancy_day_vic` through `fact_vacancy_interval_vic`, not through a second direct relationship.
 
 Important counting note:
 
@@ -50,23 +51,17 @@ Important counting note:
 - so selected-period vacancy days align with the workbook formula `MIN(end_date, report_to_date) - start_date`.
 - if the report is filtered to `2026-03-31`, a vacancy starting on `2026-01-02` contributes `88` days, not `89`.
 
-## Calendar Table
+## Date Table
 
-Create this table:
+Use the existing physical table:
 
-```DAX
-Dim Date =
-ADDCOLUMNS (
-    CALENDAR ( DATE ( 2020, 1, 1 ), DATE ( 2035, 12, 31 ) ),
-    "Year", YEAR ( [Date] ),
-    "Month Number", MONTH ( [Date] ),
-    "Month", FORMAT ( [Date], "MMM" ),
-    "Year Month", FORMAT ( [Date], "YYYY-MM" ),
-    "Quarter", "Q" & FORMAT ( [Date], "Q" )
-)
-```
+- `` `Evolve-TechOne`.Shortcut.dbo.dim_date ``
 
-Mark `Dim Date` as the date table on `Dim Date[Date]`.
+Recommended semantic model settings:
+
+- mark `dim_date[date]` as the date column if your modeling tool supports it,
+- use `dim_date[date]` for all report date slicers,
+- keep quarter, month, and year attributes from this shared table instead of recreating them in DAX.
 
 ## Core Measures
 
@@ -103,7 +98,7 @@ DIVIDE ( [Vacancy Days], [Vacancy Count] )
 ```
 
 ```DAX
-Vacancies <= 21 Days =
+Vacancies LE 21 Days =
 COUNTROWS (
     FILTER (
         VALUES ( fact_vacancy_day_vic[vacancy_id] ),
@@ -113,7 +108,7 @@ COUNTROWS (
 ```
 
 ```DAX
-Vacancies > 21 Days =
+Vacancies GT 21 Days =
 COUNTROWS (
     FILTER (
         VALUES ( fact_vacancy_day_vic[vacancy_id] ),
@@ -123,7 +118,7 @@ COUNTROWS (
 ```
 
 ```DAX
-Vacancies <= 48 Days =
+Vacancies LE 48 Days =
 COUNTROWS (
     FILTER (
         VALUES ( fact_vacancy_day_vic[vacancy_id] ),
@@ -133,7 +128,7 @@ COUNTROWS (
 ```
 
 ```DAX
-Vacancies > 48 Days =
+Vacancies GT 48 Days =
 COUNTROWS (
     FILTER (
         VALUES ( fact_vacancy_day_vic[vacancy_id] ),
@@ -143,13 +138,13 @@ COUNTROWS (
 ```
 
 ```DAX
-Pct <= 21 Days =
-DIVIDE ( [Vacancies <= 21 Days], [Vacancy Count] )
+Pct LE 21 Days =
+DIVIDE ( [Vacancies LE 21 Days], [Vacancy Count] )
 ```
 
 ```DAX
-Pct <= 48 Days =
-DIVIDE ( [Vacancies <= 48 Days], [Vacancy Count] )
+Pct LE 48 Days =
+DIVIDE ( [Vacancies LE 48 Days], [Vacancy Count] )
 ```
 
 ## Fields To Expose
@@ -170,15 +165,31 @@ From `dim_property_vic`:
 
 From `fact_vacancy_interval_vic`:
 
+- `property_id`
 - `vacancy_id`
 - `vacancy_origin`
 - `vacancy_reason`
 - `vacancy_start_date`
 - `vacancy_end_exclusive`
+- `overlap_void_start_date`
+- `overlap_void_end_date`
 - `full_vacancy_days`
 - `full_tenantable_days`
 - `full_untenantable_days`
 - `full_other_days`
+- `key_id`
+- `key_reference`
+- `key_date_received_from_tenant`
+- `key_outgoing_inspection_date`
+- `key_contractor_notified_date`
+- `key_to_lockbox_onsite`
+- `key_contractor_collect_key_date`
+- `key_contractor_name_comments`
+- `key_contractor_return_key_date`
+- `key_new_activated_property`
+- `key_vacancy_exemptions_code`
+- `key_vacancy_exemptions_desc`
+- `key_property_condition`
 - `meets_21_day_benchmark`
 - `meets_48_day_benchmark`
 
@@ -199,13 +210,14 @@ Hide technical columns such as codes, join keys that users do not need, and inte
 - Treat the `full_*` columns in `fact_vacancy_interval_vic` as lifetime interval totals, not selected-period totals.
 - Label `vacancy_end_exclusive` clearly in the report so users do not mistake it for a plain inclusive end date.
 - Keep `dim_active_vacancy_rule_parameters` disconnected and visible for governance only.
+- If you already created `dim_property_vic[property_id]` -> `fact_vacancy_day_vic[property_id]`, delete or deactivate it before creating the `vacancy_id` relationship.
 
 ## Filter Mapping
 
 Use these filters:
 
 - `Entity` = `dim_property_vic[entity]`
-- `From Date` / `To Date` = `Dim Date[Date]`
+- `From Date` / `To Date` = `dim_date[date]`
 - `Ownership` = `dim_property_vic[ownership]`
 - `CAH Program` = `dim_property_vic[housing_program]`
 - `Property Source` = `dim_property_vic[property_source]`

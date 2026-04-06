@@ -243,7 +243,9 @@ keys_columns = [
     ("DataSet.DATE_RECEIVED_FROM_TENANT", "date_received_from_tenant"),
     ("DataSet.OUTGOING_INSPECTION_DATE", "outgoing_inspection_date"),
     ("DataSet.CONTRACTOR_NOTIFIED_DATE", "contractor_notified_date"),
+    ("DataSet.TO_LOCKBOX_ONSITE", "to_lockbox_onsite"),
     ("DataSet.CONTRACTOR_COLLECT_K_DATE", "contractor_collect_key_date"),
+    ("DataSet.CONTRACTOR_NAME_COMMENTS", "contractor_name_comments"),
     ("DataSet.CONTRACTOR_RETURN_K_DATE", "contractor_return_key_date"),
     ("DataSet.NEW_ACTIVATED_PROPERTY", "new_activated_property"),
     ("DataSet.VACANCY_EXEMPTIONS_C", "vacancy_exemptions_code"),
@@ -363,6 +365,18 @@ keys = (
     )
     .withColumn("key_id", F.col("key_id").cast("string"))
     .withColumn("parent_engagement_id", F.col("parent_engagement_id").cast("string"))
+    .withColumn("property_id", F.col("parent_engagement_id"))
+    .withColumn(
+        "key_anchor_date",
+        F.coalesce(
+            F.col("date_received_from_tenant"),
+            F.col("outgoing_inspection_date"),
+            F.col("contractor_notified_date"),
+            F.col("contractor_collect_key_date"),
+            F.col("contractor_return_key_date"),
+        ),
+    )
+    .filter(F.col("property_id").isNotNull())
 )
 
 
@@ -528,6 +542,88 @@ void_intervals = (
 )
 
 
+vacancy_void_summary = (
+    vacancy_intervals.alias("v")
+    .join(
+        void_intervals.alias("d"),
+        (F.col("v.property_id") == F.col("d.property_id"))
+        & (F.col("d.void_start_date") < F.col("v.vacancy_end_exclusive"))
+        & (F.col("d.void_end_exclusive") > F.col("v.vacancy_start_date")),
+        "left",
+    )
+    .groupBy("v.vacancy_id")
+    .agg(
+        F.min("d.void_start_date").alias("overlap_void_start_date"),
+        F.max("d.void_end_date").alias("overlap_void_end_date"),
+        F.max("d.void_end_exclusive").alias("overlap_void_end_exclusive"),
+        F.countDistinct("d.void_id").alias("overlap_void_record_count"),
+    )
+)
+
+
+def in_vacancy_period(date_column: str):
+    return (
+        F.col(date_column).isNotNull()
+        & (F.col(date_column) >= F.col("v.vacancy_start_date"))
+        & (F.col(date_column) < F.col("v.vacancy_end_exclusive"))
+    )
+
+
+vacancy_keys_candidates = (
+    vacancy_intervals.alias("v")
+    .join(keys.alias("k"), F.col("v.property_id") == F.col("k.property_id"), "left")
+    .withColumn(
+        "key_match_in_vacancy",
+        F.when(
+            in_vacancy_period("k.date_received_from_tenant")
+            | in_vacancy_period("k.outgoing_inspection_date")
+            | in_vacancy_period("k.contractor_notified_date")
+            | in_vacancy_period("k.contractor_collect_key_date")
+            | in_vacancy_period("k.contractor_return_key_date"),
+            F.lit(1),
+        ).otherwise(F.lit(0)),
+    )
+    .withColumn(
+        "key_distance_days",
+        F.when(
+            F.col("k.key_anchor_date").isNotNull(),
+            F.abs(F.datediff(F.col("k.key_anchor_date"), F.col("v.vacancy_start_date"))),
+        ).otherwise(F.lit(999999)),
+    )
+)
+
+vacancy_keys_window = Window.partitionBy(F.col("v.vacancy_id")).orderBy(
+    F.col("key_match_in_vacancy").desc(),
+    F.col("key_distance_days").asc(),
+    F.col("k.key_anchor_date").desc_nulls_last(),
+    F.col("k.key_id").desc_nulls_last(),
+)
+
+vacancy_keys_selected = (
+    vacancy_keys_candidates.withColumn("key_rank", F.row_number().over(vacancy_keys_window))
+    .filter(F.col("key_rank") == 1)
+    .select(
+        F.col("v.vacancy_id").alias("vacancy_id"),
+        F.col("k.key_id").alias("key_id"),
+        F.col("k.key_reference").alias("key_reference"),
+        F.col("k.date_received_from_tenant").alias("key_date_received_from_tenant"),
+        F.col("k.outgoing_inspection_date").alias("key_outgoing_inspection_date"),
+        F.col("k.contractor_notified_date").alias("key_contractor_notified_date"),
+        F.col("k.to_lockbox_onsite").alias("key_to_lockbox_onsite"),
+        F.col("k.contractor_collect_key_date").alias("key_contractor_collect_key_date"),
+        F.col("k.contractor_name_comments").alias("key_contractor_name_comments"),
+        F.col("k.contractor_return_key_date").alias("key_contractor_return_key_date"),
+        F.col("k.new_activated_property").alias("key_new_activated_property"),
+        F.col("k.vacancy_exemptions_code").alias("key_vacancy_exemptions_code"),
+        F.col("k.vacancy_exemptions_desc").alias("key_vacancy_exemptions_desc"),
+        F.col("k.property_condition_code").alias("key_property_condition_code"),
+        F.col("k.property_condition").alias("key_property_condition"),
+        F.col("key_match_in_vacancy"),
+        F.col("key_distance_days"),
+    )
+)
+
+
 vacancy_days = (
     vacancy_intervals.select(
         "vacancy_id",
@@ -678,10 +774,16 @@ fact_vacancy_interval_vic = (
         "report_state",
         "full_vacancy_days",
     )
+    .join(vacancy_void_summary, "vacancy_id", "left")
+    .join(vacancy_keys_selected, "vacancy_id", "left")
     .join(vacancy_day_metrics, "vacancy_id", "left")
     .withColumn(
         "full_vacancy_days",
         F.coalesce(F.col("full_vacancy_days_from_day_fact"), F.col("full_vacancy_days")),
+    )
+    .withColumn(
+        "overlap_void_record_count",
+        F.coalesce(F.col("overlap_void_record_count"), F.lit(0)),
     )
     .withColumn("full_tenantable_days", F.coalesce(F.col("full_tenantable_days"), F.lit(0)))
     .withColumn(
@@ -701,7 +803,7 @@ keys_staged_vic = (
     .withColumn(
         "keys_mapping_note",
         F.lit(
-            "Keys data is staged only. Parent engagement mapping to the vacancy fact needs business confirmation before relationship activation."
+            "Keys.PARENT_ENGAGEMENT_ID is confirmed as property_id. Vacancy output uses the closest matching keys row per vacancy based on property_id and key dates."
         ),
     )
 )

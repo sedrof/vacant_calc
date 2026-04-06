@@ -10,17 +10,110 @@ The report should support three reporting modes:
 
 This is not a presentation dashboard. Build it as a working operational report.
 
+## Before You Start
+
+Use these model objects:
+
+- table `dim_date`
+- table `dim_property_vic`
+- table `fact_vacancy_interval_vic`
+- table `fact_vacancy_day_vic`
+- table `fact_void_interval_vic`
+- table `dim_active_vacancy_rule_parameters`
+
+Use these measures:
+
+- `[Vacancy Count]`
+- `[Vacancy Days]`
+- `[Tenantable Days]`
+- `[Untenantable Days]`
+- `[Other Days]`
+- `[Average Vacancy Days]`
+- `[Vacancies LE 21 Days]`
+- `[Vacancies GT 21 Days]`
+- `[Vacancies LE 48 Days]`
+- `[Vacancies GT 48 Days]`
+- `[Pct LE 21 Days]`
+- `[Pct LE 48 Days]`
+
 ## Global Slicers
 
-Use these slicers consistently where relevant:
+Add these slicers at the top of the report and sync them across pages where appropriate.
 
-- `Dim Date[Date]` as a between slicer
-- `dim_property_vic[entity]`
-- `dim_property_vic[ownership]`
-- `dim_property_vic[housing_program]`
-- `dim_property_vic[property_source]`
+### Date slicer
 
-Enable multi-select.
+Visual type:
+
+- `Slicer`
+
+Field well:
+
+- `Field` = `dim_date[date]`
+
+Settings:
+
+- slicer type = `Between`
+- show date input boxes = `On`
+
+### Entity slicer
+
+Visual type:
+
+- `Slicer`
+
+Field well:
+
+- `Field` = `dim_property_vic[entity]`
+
+Settings:
+
+- style = `Dropdown`
+- multi-select = `On`
+
+### Ownership slicer
+
+Visual type:
+
+- `Slicer`
+
+Field well:
+
+- `Field` = `dim_property_vic[ownership]`
+
+Settings:
+
+- style = `Dropdown`
+- multi-select = `On`
+
+### CAH Program slicer
+
+Visual type:
+
+- `Slicer`
+
+Field well:
+
+- `Field` = `dim_property_vic[housing_program]`
+
+Settings:
+
+- style = `Dropdown`
+- multi-select = `On`
+
+### Property Source slicer
+
+Visual type:
+
+- `Slicer`
+
+Field well:
+
+- `Field` = `dim_property_vic[property_source]`
+
+Settings:
+
+- style = `Dropdown`
+- multi-select = `On`
 
 ## Page 1: Summary
 
@@ -30,25 +123,124 @@ Purpose:
 - support annual benchmark review,
 - support ad hoc operational review.
 
-Add KPI cards:
+### KPI card 1
 
-- `[Vacancy Count]`
-- `[Vacancy Days]`
-- `[Tenantable Days]`
-- `[Untenantable Days]`
-- `[Pct <= 21 Days]`
-- `[Pct <= 48 Days]`
+Visual type:
 
-Add visuals:
+- `Card`
 
-- clustered column chart by `entity` using `[Average Vacancy Days]`
-- stacked column chart by `housing_program` using `[Tenantable Days]` and `[Untenantable Days]`
-- matrix by `ownership` and `property_source` using:
-  - `[Vacancy Count]`
-  - `[Vacancy Days]`
-  - `[Average Vacancy Days]`
-  - `[Pct <= 21 Days]`
-  - `[Pct <= 48 Days]`
+Field well:
+
+- `Data` = `[Vacancy Count]`
+
+### KPI card 2
+
+Visual type:
+
+- `Card`
+
+Field well:
+
+- `Data` = `[Vacancy Days]`
+
+### KPI card 3
+
+Visual type:
+
+- `Card`
+
+Field well:
+
+- `Data` = `[Tenantable Days]`
+
+### KPI card 4
+
+Visual type:
+
+- `Card`
+
+Field well:
+
+- `Data` = `[Untenantable Days]`
+
+### KPI card 5
+
+Visual type:
+
+- `Card`
+
+Field well:
+
+- `Data` = `[Pct LE 21 Days]`
+
+Formatting:
+
+- display units = `None`
+- show as percentage
+
+### KPI card 6
+
+Visual type:
+
+- `Card`
+
+Field well:
+
+- `Data` = `[Pct LE 48 Days]`
+
+Formatting:
+
+- display units = `None`
+- show as percentage
+
+### Visual 1: Average Vacancy Days by Entity
+
+Visual type:
+
+- `Clustered column chart`
+
+Field well:
+
+- `X-axis` = `dim_property_vic[entity]`
+- `Y-axis` = `[Average Vacancy Days]`
+- `Tooltips` = `[Vacancy Count]`, `[Vacancy Days]`
+
+Formatting:
+
+- sort by `[Average Vacancy Days]` descending
+
+### Visual 2: Tenantable vs Untenantable by CAH Program
+
+Visual type:
+
+- `Stacked column chart`
+
+Field well:
+
+- `X-axis` = `dim_property_vic[housing_program]`
+- `Y-axis` = `[Tenantable Days]`, `[Untenantable Days]`
+- `Tooltips` = `[Vacancy Days]`, `[Vacancy Count]`
+
+Formatting:
+
+- keep legend on
+
+### Visual 3: Summary matrix
+
+Visual type:
+
+- `Matrix`
+
+Field well:
+
+- `Rows` = `dim_property_vic[ownership]`
+- `Columns` = `dim_property_vic[property_source]`
+- `Values` = `[Vacancy Count]`, `[Vacancy Days]`, `[Average Vacancy Days]`, `[Pct LE 21 Days]`, `[Pct LE 48 Days]`
+
+Formatting:
+
+- show values on rows = `Off`
+- format percentage measures as percentages
 
 Page note:
 
@@ -62,32 +254,55 @@ Purpose:
 - support operational follow-up,
 - support regulator-ready extracts.
 
-Use a table visual with:
+### Visual 1: Vacancy detail table
 
-- `fact_vacancy_interval_vic[vacancy_id]`
-- `dim_property_vic[property_number]`
-- `dim_property_vic[property_short_address]`
-- `dim_property_vic[entity]`
-- `dim_property_vic[ownership]`
-- `dim_property_vic[housing_program]`
-- `dim_property_vic[property_source]`
-- `fact_vacancy_interval_vic[vacancy_origin]`
-- `fact_vacancy_interval_vic[vacancy_reason]`
-- `dim_property_vic[property_start_date]`
-- `dim_property_vic[property_end_date]`
-- `fact_vacancy_interval_vic[vacancy_start_date]`
-- `fact_vacancy_interval_vic[vacancy_end_exclusive]`
-- measure `[Vacancy Days]`
-- measure `[Tenantable Days]`
-- measure `[Untenantable Days]`
-- measure `[Other Days]`
+Visual type:
 
-Configuration:
+- `Table`
 
-- sort by `vacancy_start_date` descending,
-- enable export to Excel,
-- keep widths stable for exported output,
-- rename `vacancy_end_exclusive` on the page to `Vacancy End Boundary`.
+Field well:
+
+- `Columns` = `fact_vacancy_interval_vic[vacancy_id]`
+- `Columns` = `fact_vacancy_interval_vic[property_id]`
+- `Columns` = `dim_property_vic[property_number]`
+- `Columns` = `dim_property_vic[property_short_address]`
+- `Columns` = `dim_property_vic[entity]`
+- `Columns` = `dim_property_vic[ownership]`
+- `Columns` = `dim_property_vic[housing_program]`
+- `Columns` = `dim_property_vic[property_source]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_origin]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_reason]`
+- `Columns` = `dim_property_vic[property_start_date]`
+- `Columns` = `dim_property_vic[property_end_date]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_start_date]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_end_exclusive]`
+- `Columns` = `fact_vacancy_interval_vic[overlap_void_start_date]`
+- `Columns` = `fact_vacancy_interval_vic[overlap_void_end_date]`
+- `Columns` = `[Vacancy Days]`
+- `Columns` = `[Tenantable Days]`
+- `Columns` = `[Untenantable Days]`
+- `Columns` = `[Other Days]`
+- `Columns` = `fact_vacancy_interval_vic[key_id]`
+- `Columns` = `fact_vacancy_interval_vic[key_reference]`
+- `Columns` = `fact_vacancy_interval_vic[key_vacancy_exemptions_desc]`
+- `Columns` = `fact_vacancy_interval_vic[key_property_condition]`
+- `Columns` = `fact_vacancy_interval_vic[key_contractor_notified_date]`
+- `Columns` = `fact_vacancy_interval_vic[key_to_lockbox_onsite]`
+- `Columns` = `fact_vacancy_interval_vic[key_contractor_collect_key_date]`
+- `Columns` = `fact_vacancy_interval_vic[key_contractor_name_comments]`
+- `Columns` = `fact_vacancy_interval_vic[key_contractor_return_key_date]`
+
+Formatting:
+
+- sort by `fact_vacancy_interval_vic[vacancy_start_date]` descending
+- rename `fact_vacancy_interval_vic[vacancy_end_exclusive]` display label to `Vacancy End Boundary`
+- rename `fact_vacancy_interval_vic[overlap_void_start_date]` display label to `Void Start Date`
+- rename `fact_vacancy_interval_vic[overlap_void_end_date]` display label to `Void End Date`
+- set column widths manually for export readability
+
+Behavior:
+
+- enable export to Excel
 
 ## Page 3: Audit
 
@@ -97,25 +312,72 @@ Purpose:
 - make void overlaps visible,
 - support reconciliation against the workbook logic.
 
-Add a table from `fact_vacancy_day_vic` with:
+### Drillthrough setup
 
-- `vacancy_id`
-- `vacancy_date`
-- `day_type`
-- `void_id`
-- `void_reason`
+Create this page as a drillthrough target.
 
-Add a table from `fact_void_interval_vic` with:
+Field well:
 
-- `void_id`
-- `property_id`
-- `void_reference`
-- `void_start_date`
-- `void_end_exclusive`
-- `void_reason`
-- `property_condition`
+- `Drillthrough` = `fact_vacancy_interval_vic[vacancy_id]`
 
-Enable drillthrough on `vacancy_id` from the Vacancy Detail page to this page.
+Keep all drillthrough filters on this page.
+
+### Visual 1: Vacancy day audit table
+
+Visual type:
+
+- `Table`
+
+Field well:
+
+- `Columns` = `fact_vacancy_day_vic[vacancy_id]`
+- `Columns` = `fact_vacancy_day_vic[vacancy_date]`
+- `Columns` = `fact_vacancy_day_vic[day_type]`
+- `Columns` = `fact_vacancy_day_vic[void_id]`
+- `Columns` = `fact_vacancy_day_vic[void_reason]`
+
+Formatting:
+
+- sort by `fact_vacancy_day_vic[vacancy_date]` ascending
+
+### Visual 2: Void interval table
+
+Visual type:
+
+- `Table`
+
+Field well:
+
+- `Columns` = `fact_void_interval_vic[void_id]`
+- `Columns` = `fact_void_interval_vic[property_id]`
+- `Columns` = `fact_void_interval_vic[void_reference]`
+- `Columns` = `fact_void_interval_vic[void_start_date]`
+- `Columns` = `fact_void_interval_vic[void_end_exclusive]`
+- `Columns` = `fact_void_interval_vic[void_reason]`
+- `Columns` = `fact_void_interval_vic[property_condition]`
+
+Formatting:
+
+- rename `void_end_exclusive` display label to `Void End Boundary`
+
+### Visual 3: Keys audit table
+
+Visual type:
+
+- `Table`
+
+Field well:
+
+- `Columns` = `fact_vacancy_interval_vic[property_id]`
+- `Columns` = `fact_vacancy_interval_vic[key_id]`
+- `Columns` = `fact_vacancy_interval_vic[key_reference]`
+- `Columns` = `fact_vacancy_interval_vic[key_vacancy_exemptions_desc]`
+- `Columns` = `fact_vacancy_interval_vic[key_property_condition]`
+- `Columns` = `fact_vacancy_interval_vic[key_contractor_notified_date]`
+- `Columns` = `fact_vacancy_interval_vic[key_to_lockbox_onsite]`
+- `Columns` = `fact_vacancy_interval_vic[key_contractor_collect_key_date]`
+- `Columns` = `fact_vacancy_interval_vic[key_contractor_name_comments]`
+- `Columns` = `fact_vacancy_interval_vic[key_contractor_return_key_date]`
 
 ## Page 4: Config
 
@@ -125,16 +387,24 @@ Purpose:
 - make the report auditable,
 - avoid confusion about why boundaries may differ from raw source dates.
 
-Add a table from `dim_active_vacancy_rule_parameters` with:
+### Visual 1: Active rule table
 
-- `rule_name`
-- `offset_days`
-- `effective_from`
-- `comment`
-- `updated_by`
-- `updated_at`
+Visual type:
 
-Add a note:
+- `Table`
+
+Field well:
+
+- `Columns` = `dim_active_vacancy_rule_parameters[rule_name]`
+- `Columns` = `dim_active_vacancy_rule_parameters[offset_days]`
+- `Columns` = `dim_active_vacancy_rule_parameters[effective_from]`
+- `Columns` = `dim_active_vacancy_rule_parameters[comment]`
+- `Columns` = `dim_active_vacancy_rule_parameters[updated_by]`
+- `Columns` = `dim_active_vacancy_rule_parameters[updated_at]`
+
+### Visual 2: explanatory text
+
+Add a text box with this wording:
 
 - `These parameters are maintained in Fabric and applied during notebook refresh. They are not report-side what-if settings.`
 

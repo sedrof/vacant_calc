@@ -29,6 +29,10 @@ The notebook source of truth is:
 
 - `../vacancy_reporting_vic_notebook.py`
 
+Existing shared model table:
+
+- `` `Evolve-TechOne`.Shortcut.dbo.dim_date ``
+
 ## Working Principle
 
 The report is designed to be:

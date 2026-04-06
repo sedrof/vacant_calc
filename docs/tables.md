@@ -95,9 +95,9 @@ Columns currently used by the notebook:
 
 Purpose:
 
-- staged for future enhancement,
-- may support vacancy-event audit or exemptions later,
-- currently not related into the model because the engagement mapping is not confirmed.
+- supports vacancy-related operational context,
+- provides vacancy exemptions, property condition, and contractor/key handling dates,
+- is matched through `PARENT_ENGAGEMENT_ID = property_id`.
 
 Columns currently used by the notebook:
 
@@ -107,7 +107,9 @@ Columns currently used by the notebook:
 - `DataSet.DATE_RECEIVED_FROM_TENANT`
 - `DataSet.OUTGOING_INSPECTION_DATE`
 - `DataSet.CONTRACTOR_NOTIFIED_DATE`
+- `DataSet.TO_LOCKBOX_ONSITE`
 - `DataSet.CONTRACTOR_COLLECT_K_DATE`
+- `DataSet.CONTRACTOR_NAME_COMMENTS`
 - `DataSet.CONTRACTOR_RETURN_K_DATE`
 - `DataSet.NEW_ACTIVATED_PROPERTY`
 - `DataSet.VACANCY_EXEMPTIONS_C`
@@ -130,8 +132,13 @@ The current implementation uses these keys:
 
 - `Property.PROPERTYID` to `Tenancy.PROPID`
 - `Property.PROPERTYID` to `Void.PROP_ID`
+- `Property.PROPERTYID` to `Keys.PARENT_ENGAGEMENT_ID`
 
-`Keys.PARENT_ENGAGEMENT_ID` is not yet joined because the relationship is not confirmed.
+For report enrichment, the notebook selects one representative keys row per vacancy using:
+
+- matching `property_id`,
+- preference for keys dates that fall inside the vacancy interval,
+- then nearest keys date to the vacancy start date.
 
 ## Important Data Notes
 
@@ -145,7 +152,6 @@ Only extend the current source map after confirming the business rule that needs
 
 Likely future areas:
 
-- `Keys` mapping confirmation,
 - a real definition for `Other Days`,
 - resident-level enrichments from `Resident_Data`,
 - formal exemption logic if approved by the business.

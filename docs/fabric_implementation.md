@@ -27,6 +27,10 @@ Parameter maintenance notebook:
 
 - `../vacancy_rule_parameter_maintenance_notebook.py`
 
+Existing shared date dimension:
+
+- `` `Evolve-TechOne`.Shortcut.dbo.dim_date ``
+
 ## Step 1: Review The Inputs
 
 Before building anything, confirm these inputs:
@@ -61,6 +65,11 @@ The notebook then writes these reporting tables:
 - `vacancy_reporting.fact_vacancy_interval_vic`
 - `vacancy_reporting.fact_void_interval_vic`
 - `vacancy_reporting.stg_keys_vic`
+
+The vacancy interval table also includes:
+
+- overlapping void start and end values where available,
+- one representative keys row per vacancy using the confirmed `PARENT_ENGAGEMENT_ID = property_id` mapping.
 
 ## Step 3: Validate The Parameter Table
 
@@ -117,6 +126,8 @@ Important design choice:
 
 - date filtering must primarily work through `fact_vacancy_day_vic`,
 - interval tables are supporting structures, not the main date filter path.
+- property should filter day-level rows through `fact_vacancy_interval_vic`, not through a second direct property-to-day relationship.
+- use the existing physical `dim_date` table in Fabric, not a DAX-generated calendar table.
 
 Keep the model auditable and avoid report-only logic that duplicates the notebook rules.
 
@@ -147,7 +158,8 @@ Do not change offsets in the report itself for the official reporting process.
 ## Current Assumptions
 
 - `Property Program` is used as `Property Source`.
-- `Keys` remains staged only.
+- `Keys.PARENT_ENGAGEMENT_ID` is treated as `property_id`.
+- one representative keys row is selected per vacancy based on property match and date proximity.
 - `Resident_Data` is not required for the current vacancy logic.
 - `Other Days` remains `0` until a real rule is approved.
 

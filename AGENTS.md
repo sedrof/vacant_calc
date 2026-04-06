@@ -50,9 +50,11 @@ Do not invent business rules to fill gaps.
 ## Modeling Rules
 
 - Keep the daily-grain fact table because it is required for reliable `From Date` / `To Date` filtering.
+- Use the existing physical `dim_date` table instead of creating a new DAX calendar unless the user explicitly asks for a different approach.
 - Treat `vacancy_end_exclusive` as the technical boundary used for correct day counting.
 - If a report needs a user-facing inclusive end date, derive or label it clearly instead of changing the storage logic.
-- Do not activate a `Keys` relationship until the engagement mapping is confirmed.
+- `Keys.PARENT_ENGAGEMENT_ID` is confirmed as `property_id`.
+- Prefer embedding representative keys fields into `fact_vacancy_interval_vic` over adding a separate active report relationship to `stg_keys_vic`.
 
 ## Documentation Rules
 

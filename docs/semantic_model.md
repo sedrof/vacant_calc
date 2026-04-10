@@ -9,6 +9,8 @@ This model must support two things at the same time:
 
 For that reason, the daily fact table is the center of the model.
 
+The date slicer is not limited to quarters or fixed periods. Management can choose any `From Date` and `To Date`, and the model must return the relevant vacancy activity for that selected window.
+
 ## Tables To Load
 
 Load these tables from Fabric:
@@ -43,6 +45,16 @@ The report filters by date range. If date filtering only touches the interval ta
 Using `fact_vacancy_day_vic` as the main fact solves that problem because every day in the selected range is explicit.
 
 To avoid ambiguous filter paths, `dim_property_vic` should filter `fact_vacancy_day_vic` through `fact_vacancy_interval_vic`, not through a second direct relationship.
+
+This means the `dim_date[date]` slicer filters day rows first. With the `Both` cross-filter on `vacancy_id`, that date selection then filters vacancy interval rows back through `fact_vacancy_day_vic`.
+
+Important behavior:
+
+- the date slicer controls the selected reporting window, not just calendar labels,
+- `From Date` removes vacancy day rows before the chosen start date,
+- `To Date` removes vacancy day rows after the chosen end date,
+- descriptive columns such as `property_start_date`, `property_end_date`, `vacancy_start_date`, and `void_start_date` can still display values outside the slicer if the vacancy overlaps the selected window.
+- `vacancy_end_exclusive` is a technical boundary. If you need a user-facing inclusive end inside a measure, convert it with `vacancy_end_exclusive - 1`.
 
 Important counting note:
 
@@ -87,6 +99,26 @@ Other Days =
 SUM ( fact_vacancy_day_vic[other_day_count] )
 ```
 
+Worked example:
+
+- vacancy start boundary = `2026-01-02`
+- vacancy end boundary = `2026-01-10`
+- counted vacancy days = `2026-01-03` to `2026-01-09`
+- overlapping void period = `2026-01-05` to `2026-01-06`
+- counted void days = `2026-01-06`
+
+Result:
+
+- `Vacancy Days` = `7`
+- `Untenantable Days` = `1`
+- `Tenantable Days` = `6`
+
+This follows the implemented rule:
+
+- vacancy day rows are created from `vacancy_start_date + 1` through `vacancy_end_exclusive - 1`
+- void day rows are created the same way
+- a counted vacancy day is `Tenantable` only when it does not overlap a counted void day
+
 ```DAX
 Vacancy Count =
 DISTINCTCOUNT ( fact_vacancy_day_vic[vacancy_id] )
@@ -99,41 +131,33 @@ DIVIDE ( [Vacancy Days], [Vacancy Count] )
 
 ```DAX
 Vacancies LE 21 Days =
-COUNTROWS (
-    FILTER (
-        VALUES ( fact_vacancy_day_vic[vacancy_id] ),
-        CALCULATE ( [Vacancy Days] ) <= 21
-    )
+SUMX (
+    VALUES ( fact_vacancy_interval_vic[vacancy_id] ),
+    IF ( CALCULATE ( [Vacancy Days] ) <= 21, 1, 0 )
 )
 ```
 
 ```DAX
 Vacancies GT 21 Days =
-COUNTROWS (
-    FILTER (
-        VALUES ( fact_vacancy_day_vic[vacancy_id] ),
-        CALCULATE ( [Vacancy Days] ) > 21
-    )
+SUMX (
+    VALUES ( fact_vacancy_interval_vic[vacancy_id] ),
+    IF ( CALCULATE ( [Vacancy Days] ) > 21, 1, 0 )
 )
 ```
 
 ```DAX
 Vacancies LE 48 Days =
-COUNTROWS (
-    FILTER (
-        VALUES ( fact_vacancy_day_vic[vacancy_id] ),
-        CALCULATE ( [Vacancy Days] ) <= 48
-    )
+SUMX (
+    VALUES ( fact_vacancy_interval_vic[vacancy_id] ),
+    IF ( CALCULATE ( [Vacancy Days] ) <= 48, 1, 0 )
 )
 ```
 
 ```DAX
 Vacancies GT 48 Days =
-COUNTROWS (
-    FILTER (
-        VALUES ( fact_vacancy_day_vic[vacancy_id] ),
-        CALCULATE ( [Vacancy Days] ) > 48
-    )
+SUMX (
+    VALUES ( fact_vacancy_interval_vic[vacancy_id] ),
+    IF ( CALCULATE ( [Vacancy Days] ) > 48, 1, 0 )
 )
 ```
 
@@ -146,6 +170,52 @@ DIVIDE ( [Vacancies LE 21 Days], [Vacancy Count] )
 Pct LE 48 Days =
 DIVIDE ( [Vacancies LE 48 Days], [Vacancy Count] )
 ```
+
+```DAX
+Vacancy Overlaps Selected Period =
+VAR ReportFrom =
+    MIN ( dim_date[date] )
+VAR ReportTo =
+    MAX ( dim_date[date] )
+VAR VacancyStart =
+    SELECTEDVALUE ( fact_vacancy_interval_vic[vacancy_start_date] )
+VAR VacancyEnd =
+    VAR EndExclusive =
+        SELECTEDVALUE ( fact_vacancy_interval_vic[vacancy_end_exclusive] )
+    RETURN
+        IF ( NOT ISBLANK ( EndExclusive ), EndExclusive - 1 )
+RETURN
+IF (
+    NOT ISBLANK ( VacancyStart ) &&
+    VacancyStart <= ReportTo &&
+    ( ISBLANK ( VacancyEnd ) || VacancyEnd >= ReportFrom ),
+    1,
+    0
+)
+```
+
+```DAX
+Property Overlaps Selected Period =
+VAR ReportFrom =
+    MIN ( dim_date[date] )
+VAR ReportTo =
+    MAX ( dim_date[date] )
+VAR PropertyStart =
+    SELECTEDVALUE ( dim_property_vic[property_start_date] )
+VAR PropertyEnd =
+    SELECTEDVALUE ( dim_property_vic[property_end_date] )
+RETURN
+IF (
+    ( ISBLANK ( PropertyStart ) || PropertyStart <= ReportTo ) &&
+    ( ISBLANK ( PropertyEnd ) || PropertyEnd >= ReportFrom ),
+    1,
+    0
+)
+```
+
+Use `Vacancy Overlaps Selected Period` as the main row-visibility filter on detail visuals that should only show vacancies relevant to the selected date window.
+
+Use `Property Overlaps Selected Period` only where the business explicitly wants to filter by property lifecycle overlap with the selected date window.
 
 ## Fields To Expose
 
@@ -169,8 +239,20 @@ From `fact_vacancy_interval_vic`:
 - `vacancy_id`
 - `vacancy_origin`
 - `vacancy_reason`
+- `vacancy_start_tenancy_id`
+- `vacancy_start_tenancy_start_date`
+- `vacancy_start_tenancy_end_date`
+- `vacancy_end_tenancy_id`
+- `vacancy_end_tenancy_start_date`
+- `vacancy_end_tenancy_end_date`
 - `vacancy_start_date`
 - `vacancy_end_exclusive`
+- `void_id`
+- `void_reference`
+- `void_start_date`
+- `void_end_date`
+- `void_reason_code`
+- `void_reason`
 - `overlap_void_start_date`
 - `overlap_void_end_date`
 - `full_vacancy_days`
@@ -189,6 +271,7 @@ From `fact_vacancy_interval_vic`:
 - `key_new_activated_property`
 - `key_vacancy_exemptions_code`
 - `key_vacancy_exemptions_desc`
+- `key_property_condition_code`
 - `key_property_condition`
 - `meets_21_day_benchmark`
 - `meets_48_day_benchmark`
@@ -211,6 +294,12 @@ Hide technical columns such as codes, join keys that users do not need, and inte
 - Label `vacancy_end_exclusive` clearly in the report so users do not mistake it for a plain inclusive end date.
 - Keep `dim_active_vacancy_rule_parameters` disconnected and visible for governance only.
 - If you already created `dim_property_vic[property_id]` -> `fact_vacancy_day_vic[property_id]`, delete or deactivate it before creating the `vacancy_id` relationship.
+- `void_*` fields in `fact_vacancy_interval_vic` represent one selected overlapping void row per vacancy. Use `overlap_void_record_count` if you later expose it and need to identify multiple overlaps.
+- `vacancy_start_tenancy_*` fields represent the tenancy that ended into the vacancy.
+- `vacancy_end_tenancy_*` fields represent the next tenancy that closes the vacancy. For initial property vacancies, the start-side tenancy fields are blank by design.
+- Keep the global `dim_date[date]` slicer. Do not replace it with slicers on `vacancy_start_date` or `vacancy_end_date`.
+- If a detail visual should show only vacancies relevant to the selected window, use a visual-level filter with `Vacancy Overlaps Selected Period = 1`.
+- If a visual should also respect property lifecycle overlap, add `Property Overlaps Selected Period = 1` as an additional visual-level filter.
 
 ## Filter Mapping
 

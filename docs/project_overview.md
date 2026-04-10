@@ -56,6 +56,12 @@ This is deliberate. It prevents off-by-one errors and makes daily date slicing r
 
 The source data may be one day behind the Australian business date because of server timing. That correction is now governed in Fabric through a config table, not hardcoded in the report.
 
+Important clarification:
+
+- the notebook supports raw source date shifts per table,
+- but those shifts only apply if the active config rows are set,
+- they are not automatically enabled unless `cfg_vacancy_rule_parameters` has been updated.
+
 The active rules are stored in:
 
 - `vacancy_reporting.cfg_vacancy_rule_parameters`
@@ -65,6 +71,13 @@ The active values published for reporting are stored in:
 - `vacancy_reporting.dim_active_vacancy_rule_parameters`
 
 This allows controlled changes without editing the report each time a date correction rule changes.
+
+If the confirmed business rule is that all relevant TechOne source dates are one day behind, activate these rules with `offset_days = 1`:
+
+- `property_source_date_offset`
+- `tenancy_source_date_offset`
+- `void_source_date_offset`
+- `keys_source_date_offset`
 
 The recommended maintenance path is the Fabric notebook script:
 
@@ -91,6 +104,8 @@ The report must also support these main filters:
 - `CAH Program`
 - `Property Source`
 
+These are not fixed quarter filters. Management can choose any reporting window with `From Date` and `To Date`, and the report should return the vacancies relevant to that selected date range.
+
 ## Current Solution Design
 
 The implementation uses:
@@ -99,6 +114,8 @@ The implementation uses:
 - an existing shared `dim_date` table for date filtering,
 - a semantic model on top of those tables,
 - a Power BI report with summary, detail, audit, and config views.
+
+The date slicer filters the daily vacancy fact, and the detail visuals can then use overlap measures to control which vacancy rows are shown for the selected reporting window.
 
 The main notebook is:
 
@@ -120,6 +137,7 @@ These decisions are intentional and should not be changed without evidence:
 - `Resident_Data` is not part of the first vacancy calculation build because it is not needed for the current logic.
 - `Keys.PARENT_ENGAGEMENT_ID` is confirmed as `property_id`.
 - The vacancy interval output includes overlapping void start/end values and a representative keys row per vacancy.
+- The vacancy interval output also includes tenancy context for the tenancy that ended into the vacancy and the next tenancy that closed it, using `Property.PROPERTYID = Tenancy.PROPID`.
 - `Other Days` remains `0` because no valid source rule has been confirmed.
 - `Property Program` is currently used as `Property Source`.
 

@@ -90,7 +90,6 @@ Columns currently used by the notebook:
 - `DataSet.PROPERTY_CONDITION`
 - `DataSet.PROPERTY_CONDITION_D`
 - `DataSet.KEY_REGISTER_ENG_ID`
-
 ### 4. `Keys`
 
 Purpose:
@@ -140,9 +139,18 @@ For report enrichment, the notebook selects one representative keys row per vaca
 - preference for keys dates that fall inside the vacancy interval,
 - then nearest keys date to the vacancy start date.
 
+For vacancy detail reporting, the notebook also carries tenancy context into the vacancy interval output using:
+
+- `vacancy_start_tenancy_id`, `vacancy_start_tenancy_start_date`, `vacancy_start_tenancy_end_date`
+- `vacancy_end_tenancy_id`, `vacancy_end_tenancy_start_date`, `vacancy_end_tenancy_end_date`
+
+These fields are derived by matching `Property.PROPERTYID` to `Tenancy.PROPID`.
+
 ## Important Data Notes
 
 - Date correction offsets are applied in the notebook through governed Fabric parameters.
+- Raw source date shifts are controlled separately for `Property`, `Tenancy`, `Void`, and `Keys`.
+- If the confirmed TechOne rule is that source dates are one day behind, set `property_source_date_offset`, `tenancy_source_date_offset`, `void_source_date_offset`, and `keys_source_date_offset` to `1`.
 - The notebook stores vacancy intervals using an exclusive end boundary for reliable day counting.
 - The report uses the daily fact table as the main date-filtering layer.
 

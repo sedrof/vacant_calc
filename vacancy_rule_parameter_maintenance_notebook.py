@@ -19,16 +19,44 @@ ACTION = "view_active"
 # Each entry becomes the new active row for that rule_name.
 RULE_UPDATES = [
     {
+        "rule_name": "property_source_date_offset",
+        "offset_days": 1,
+        "effective_from": "2026-04-08",
+        "comment": "TechOne source dates are one day behind Australian business date.",
+        "updated_by": "fabric_admin",
+    },
+    {
+        "rule_name": "tenancy_source_date_offset",
+        "offset_days": 1,
+        "effective_from": "2026-04-08",
+        "comment": "TechOne source dates are one day behind Australian business date.",
+        "updated_by": "fabric_admin",
+    },
+    {
+        "rule_name": "void_source_date_offset",
+        "offset_days": 1,
+        "effective_from": "2026-04-08",
+        "comment": "TechOne source dates are one day behind Australian business date.",
+        "updated_by": "fabric_admin",
+    },
+    {
+        "rule_name": "keys_source_date_offset",
+        "offset_days": 1,
+        "effective_from": "2026-04-08",
+        "comment": "TechOne source dates are one day behind Australian business date.",
+        "updated_by": "fabric_admin",
+    },
+    {
         "rule_name": "tenancy_end_to_vacancy_start",
         "offset_days": 1,
-        "effective_from": "2026-04-03",
+        "effective_from": "2026-04-08",
         "comment": "Server is one day behind AU business date.",
         "updated_by": "fabric_admin",
     },
     {
         "rule_name": "next_tenancy_start_to_vacancy_end",
         "offset_days": -1,
-        "effective_from": "2026-04-03",
+        "effective_from": "2026-04-08",
         "comment": "Workbook boundary rule for inclusive vacancy end.",
         "updated_by": "fabric_admin",
     },

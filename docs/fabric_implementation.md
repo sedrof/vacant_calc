@@ -40,6 +40,8 @@ Before building anything, confirm these inputs:
 - The target state is `VIC`.
 - The report requires `Entity`, `From Date`, `To Date`, `Ownership`, `CAH Program`, and `Property Source` filters.
 
+The date window is management-selected. Do not assume quarter-only reporting. The final report must work for any `From Date` and `To Date` chosen in the slicer.
+
 Do not start model or report work before confirming the workbook boundary logic.
 
 ## Step 2: Create And Run The Notebook
@@ -70,6 +72,8 @@ The vacancy interval table also includes:
 
 - overlapping void start and end values where available,
 - one representative keys row per vacancy using the confirmed `PARENT_ENGAGEMENT_ID = property_id` mapping.
+- one representative overlapping void row per vacancy including `void_id`, `void_start_date`, `void_end_date`, and `void_reason`.
+- tenancy context for the tenancy that ends into the vacancy and the next tenancy that closes it, including tenancy IDs and tenancy start/end dates where available.
 
 ## Step 3: Validate The Parameter Table
 
@@ -91,16 +95,28 @@ Recommended notebook flow:
 
 The key rules are:
 
+- `property_source_date_offset`
+- `tenancy_source_date_offset`
+- `void_source_date_offset`
+- `keys_source_date_offset`
 - `tenancy_end_to_vacancy_start`
 - `next_tenancy_start_to_vacancy_end`
 - `property_start_to_vacancy_start`
-- optional raw source offsets for `Property`, `Tenancy`, `Void`, and `Keys`
 
 Expected default behavior:
 
 - tenancy end `2026-01-01` becomes vacancy start `2026-01-02`
 - next tenancy start `2026-04-05` becomes vacancy inclusive end `2026-04-04`
 - workbook `Vac days` for a report ending `2026-03-31` becomes `88`, because the workbook formula is `MIN(vacancy_end, report_to_date) - vacancy_start`
+
+If the confirmed business rule is that the TechOne source dates are one day behind, set these raw source offset rules to `1` before rerunning the main notebook:
+
+- `property_source_date_offset`
+- `tenancy_source_date_offset`
+- `void_source_date_offset`
+- `keys_source_date_offset`
+
+That shifts the raw dates in the notebook before the vacancy and void interval logic is applied.
 
 If the business wants different offsets, change the config table first and rerun the notebook.
 
@@ -128,6 +144,7 @@ Important design choice:
 - interval tables are supporting structures, not the main date filter path.
 - property should filter day-level rows through `fact_vacancy_interval_vic`, not through a second direct property-to-day relationship.
 - use the existing physical `dim_date` table in Fabric, not a DAX-generated calendar table.
+- for detail visuals, use overlap measures to control which vacancy or property rows remain visible for the selected date window.
 
 Keep the model auditable and avoid report-only logic that duplicates the notebook rules.
 

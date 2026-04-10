@@ -10,6 +10,8 @@ The report should support three reporting modes:
 
 This is not a presentation dashboard. Build it as a working operational report.
 
+The global date slicer is a free management-selected reporting window. It is not tied to quarter-end logic. Users can choose any `From Date` and `To Date` and the visuals should show the relevant vacancy activity for that exact date range.
+
 ## Before You Start
 
 Use these model objects:
@@ -54,6 +56,12 @@ Settings:
 
 - slicer type = `Between`
 - show date input boxes = `On`
+
+Behavior:
+
+- `From Date` removes vacancy day rows before the selected start date
+- `To Date` removes vacancy day rows after the selected end date
+- this slicer does not automatically force descriptive columns such as `property_start_date` or `void_start_date` to sit inside the selected range
 
 ### Entity slicer
 
@@ -274,8 +282,19 @@ Field well:
 - `Columns` = `fact_vacancy_interval_vic[vacancy_reason]`
 - `Columns` = `dim_property_vic[property_start_date]`
 - `Columns` = `dim_property_vic[property_end_date]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_id]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_start_date]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_id]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_start_date]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_end_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_end_exclusive]`
+- `Columns` = `fact_vacancy_interval_vic[void_id]`
+- `Columns` = `fact_vacancy_interval_vic[void_reference]`
+- `Columns` = `fact_vacancy_interval_vic[void_start_date]`
+- `Columns` = `fact_vacancy_interval_vic[void_end_date]`
+- `Columns` = `fact_vacancy_interval_vic[void_reason]`
 - `Columns` = `fact_vacancy_interval_vic[overlap_void_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[overlap_void_end_date]`
 - `Columns` = `[Vacancy Days]`
@@ -284,7 +303,9 @@ Field well:
 - `Columns` = `[Other Days]`
 - `Columns` = `fact_vacancy_interval_vic[key_id]`
 - `Columns` = `fact_vacancy_interval_vic[key_reference]`
+- `Columns` = `fact_vacancy_interval_vic[key_vacancy_exemptions_code]`
 - `Columns` = `fact_vacancy_interval_vic[key_vacancy_exemptions_desc]`
+- `Columns` = `fact_vacancy_interval_vic[key_property_condition_code]`
 - `Columns` = `fact_vacancy_interval_vic[key_property_condition]`
 - `Columns` = `fact_vacancy_interval_vic[key_contractor_notified_date]`
 - `Columns` = `fact_vacancy_interval_vic[key_to_lockbox_onsite]`
@@ -296,13 +317,32 @@ Formatting:
 
 - sort by `fact_vacancy_interval_vic[vacancy_start_date]` descending
 - rename `fact_vacancy_interval_vic[vacancy_end_exclusive]` display label to `Vacancy End Boundary`
-- rename `fact_vacancy_interval_vic[overlap_void_start_date]` display label to `Void Start Date`
-- rename `fact_vacancy_interval_vic[overlap_void_end_date]` display label to `Void End Date`
+- rename `fact_vacancy_interval_vic[vacancy_start_tenancy_id]` display label to `Previous Tenancy ID`
+- rename `fact_vacancy_interval_vic[vacancy_start_tenancy_start_date]` display label to `Previous Tenancy Start Date`
+- rename `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]` display label to `Previous Tenancy End Date`
+- rename `fact_vacancy_interval_vic[vacancy_end_tenancy_id]` display label to `Next Tenancy ID`
+- rename `fact_vacancy_interval_vic[vacancy_end_tenancy_start_date]` display label to `Next Tenancy Start Date`
+- rename `fact_vacancy_interval_vic[vacancy_end_tenancy_end_date]` display label to `Next Tenancy End Date`
+- rename `fact_vacancy_interval_vic[void_start_date]` display label to `Selected Void Start Date`
+- rename `fact_vacancy_interval_vic[void_end_date]` display label to `Selected Void End Date`
+- rename `fact_vacancy_interval_vic[overlap_void_start_date]` display label to `Overall Void Start Date`
+- rename `fact_vacancy_interval_vic[overlap_void_end_date]` display label to `Overall Void End Date`
 - set column widths manually for export readability
+
+Clarification:
+
+- `vacancy_start_tenancy_*` columns describe the tenancy that ended into the vacancy.
+- `vacancy_end_tenancy_*` columns describe the next tenancy that closes the vacancy.
+- `void_*` columns are the first selected overlapping void row for the vacancy.
+- `overlap_void_*` columns show the overall overlap range across all matching void rows for that vacancy.
 
 Behavior:
 
 - enable export to Excel
+- add visual-level filter `Vacancy Overlaps Selected Period`
+- set `Vacancy Overlaps Selected Period` to `is 1`
+- add visual-level filter `Property Overlaps Selected Period` only if the business wants to hide properties that do not overlap the selected date range
+- keep the `dim_date[date]` global slicer in place so the day-based measures still count only the selected date window
 
 ## Page 3: Audit
 

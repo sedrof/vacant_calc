@@ -60,6 +60,13 @@ RULE_UPDATES = [
         "comment": "Workbook boundary rule for inclusive vacancy end.",
         "updated_by": "fabric_admin",
     },
+    {
+        "rule_name": "property_end_to_vacancy_end",
+        "offset_days": 1,
+        "effective_from": "2026-04-08",
+        "comment": "Vacancy inclusive end boundary stops on the property end date (+1 day offset for exclusive computing).",
+        "updated_by": "fabric_admin",
+    },
 ]
 
 

@@ -280,16 +280,12 @@ Field well:
 - `Columns` = `dim_property_vic[property_source]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_origin]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_reason]`
-- `Columns` = `dim_property_vic[property_start_date]`
-- `Columns` = `dim_property_vic[property_end_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_id]`
-- `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]`
-- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_id]`
-- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_start_date]`
-- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_end_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_end_exclusive]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_id]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[void_id]`
 - `Columns` = `fact_vacancy_interval_vic[void_reference]`
 - `Columns` = `fact_vacancy_interval_vic[void_start_date]`
@@ -316,18 +312,93 @@ Field well:
 Formatting:
 
 - sort by `fact_vacancy_interval_vic[vacancy_start_date]` descending
-- rename `fact_vacancy_interval_vic[vacancy_end_exclusive]` display label to `Vacancy End Boundary`
+- rename `fact_vacancy_interval_vic[vacancy_id]` display label to `Vacancy ID`
+- rename `fact_vacancy_interval_vic[property_id]` display label to `Property ID`
+- rename `dim_property_vic[property_number]` display label to `Property Number`
+- rename `dim_property_vic[property_short_address]` display label to `Property Address`
+- rename `dim_property_vic[entity]` display label to `Entity`
+- rename `dim_property_vic[ownership]` display label to `Ownership`
+- rename `dim_property_vic[housing_program]` display label to `Housing Program`
+- rename `dim_property_vic[property_source]` display label to `Property Source`
+- rename `fact_vacancy_interval_vic[vacancy_origin]` display label to `Vacancy Origin`
+- rename `fact_vacancy_interval_vic[vacancy_reason]` display label to `Vacancy Reason`
 - rename `fact_vacancy_interval_vic[vacancy_start_tenancy_id]` display label to `Previous Tenancy ID`
-- rename `fact_vacancy_interval_vic[vacancy_start_tenancy_start_date]` display label to `Previous Tenancy Start Date`
 - rename `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]` display label to `Previous Tenancy End Date`
+- rename `fact_vacancy_interval_vic[vacancy_start_date]` display label to `Vacancy Start Date`
+- rename `fact_vacancy_interval_vic[vacancy_end_exclusive]` display label to `Vacancy End Boundary`
 - rename `fact_vacancy_interval_vic[vacancy_end_tenancy_id]` display label to `Next Tenancy ID`
 - rename `fact_vacancy_interval_vic[vacancy_end_tenancy_start_date]` display label to `Next Tenancy Start Date`
-- rename `fact_vacancy_interval_vic[vacancy_end_tenancy_end_date]` display label to `Next Tenancy End Date`
+- rename `dim_property_vic[property_start_date]` display label to `Property Start Date`
+- rename `dim_property_vic[property_end_date]` display label to `Property End Date`
+- rename `fact_vacancy_interval_vic[void_id]` display label to `Void ID`
+- rename `fact_vacancy_interval_vic[void_reference]` display label to `Void Reference`
 - rename `fact_vacancy_interval_vic[void_start_date]` display label to `Selected Void Start Date`
 - rename `fact_vacancy_interval_vic[void_end_date]` display label to `Selected Void End Date`
+- rename `fact_vacancy_interval_vic[void_reason]` display label to `Void Reason`
 - rename `fact_vacancy_interval_vic[overlap_void_start_date]` display label to `Overall Void Start Date`
 - rename `fact_vacancy_interval_vic[overlap_void_end_date]` display label to `Overall Void End Date`
+- rename `[Vacancy Days]` display label to `Vacancy Days`
+- rename `[Tenantable Days]` display label to `Tenantable Days`
+- rename `[Untenantable Days]` display label to `Untenantable Days`
+- rename `[Other Days]` display label to `Other Days`
+- rename `fact_vacancy_interval_vic[key_id]` display label to `Keys Record ID`
+- rename `fact_vacancy_interval_vic[key_reference]` display label to `Keys Reference`
+- rename `fact_vacancy_interval_vic[key_vacancy_exemptions_code]` display label to `Vacancy Exemption Code`
+- rename `fact_vacancy_interval_vic[key_vacancy_exemptions_desc]` display label to `Vacancy Exemption`
+- rename `fact_vacancy_interval_vic[key_property_condition_code]` display label to `Property Condition Code`
+- rename `fact_vacancy_interval_vic[key_property_condition]` display label to `Property Condition`
+- rename `fact_vacancy_interval_vic[key_contractor_notified_date]` display label to `Contractor Notified Date`
+- rename `fact_vacancy_interval_vic[key_to_lockbox_onsite]` display label to `Lockbox On Site`
+- rename `fact_vacancy_interval_vic[key_contractor_collect_key_date]` display label to `Contractor Collected Key Date`
+- rename `fact_vacancy_interval_vic[key_contractor_name_comments]` display label to `Contractor Comments`
+- rename `fact_vacancy_interval_vic[key_contractor_return_key_date]` display label to `Contractor Returned Key Date`
 - set column widths manually for export readability
+
+Recommended final column order for management:
+
+- `Vacancy ID`
+- `Property Number`
+- `Property Address`
+- `Entity`
+- `Ownership`
+- `Housing Program`
+- `Property Source`
+- `Vacancy Origin`
+- `Vacancy Reason`
+- `Property Start Date`
+- `Property End Date`
+- `Previous Tenancy ID`
+- `Previous Tenancy End Date`
+- `Vacancy Start Date`
+- `Vacancy End Boundary`
+- `Next Tenancy ID`
+- `Next Tenancy Start Date`
+- `Vacancy Days`
+- `Tenantable Days`
+- `Untenantable Days`
+- `Other Days`
+- `Void ID`
+- `Void Reference`
+- `Selected Void Start Date`
+- `Selected Void End Date`
+- `Void Reason`
+- `Overall Void Start Date`
+- `Overall Void End Date`
+- `Keys Record ID`
+- `Keys Reference`
+- `Vacancy Exemption`
+- `Property Condition`
+- `Contractor Notified Date`
+- `Lockbox On Site`
+- `Contractor Collected Key Date`
+- `Contractor Comments`
+- `Contractor Returned Key Date`
+
+Optional technical columns to keep only if the business asks:
+
+- `Property ID`
+- `Vacancy Exemption Code`
+- `Property Condition Code`
 
 Clarification:
 

@@ -70,6 +70,91 @@ Columns currently used by the notebook:
 - `DataSet.ACTIVECODE`
 - `DataSet.INACTIVEDATE`
 
+Additional confirmed fields available from the sample tenancy extract:
+
+- `DataSet.LATESTRENTREVIEWAMOUNT`
+- `DataSet.LATESTCONTRIBUTEDRENT`
+- `DataSet.LATESTCRAAMOUNT`
+- `DataSet.LATESTRRC25OFDSP`
+- `DataSet.LATESTCONTINUITYSUPPORT`
+- `DataSet.LATESTVBCAMOUNT`
+- `DataSet.STATE`
+- `DataSet.STATEDESC`
+- `DataSet.SHERIFFEVICTION`
+- `DataSet.SHERIFFEVICTIONDESC`
+- `DataSet.DATEOFOFFER`
+- `DataSet.OFFERACCEPTED`
+- `DataSet.INITIALLEASEPERIODDESC`
+- `DataSet.TENANCYPAYWAYID`
+- `DataSet.PREVIOUSHOUSINGSTATUS`
+- `DataSet.PREVHOUSINGSTATUSDESC`
+- `DataSet.TENANCYTYPE`
+- `DataSet.TENANCYTYPEDESC`
+- `DataSet.TOTALASSESSABLEINCOME`
+- `DataSet.INCOMESOURCE`
+- `DataSet.INCOMESOURCEDESC`
+- `DataSet.TOTALNONASSESINCOME`
+- `DataSet.RENTREVIEWOFFICER`
+- `DataSet.RENTREVIEWOFFICERDESC`
+- `DataSet.BATCHTRANSFERNO`
+- `DataSet.TRANSFERNO`
+- `DataSet.WHERENEXTHOUSED`
+- `DataSet.WHERENEXTHOUSEDDESC`
+- `DataSet.HOMELESSNESS`
+- `DataSet.HOMELESSNESSDESC`
+- `DataSet.CONTACTID`
+- `DataSet.EMAILCONTACT`
+- `DataSet.DATEOFBIRTHCONTACT`
+- `DataSet.CLIENTIDPAYWAY`
+- `DataSet.TENANCYSUMMARYPROPERTY`
+- `DataSet.PROPERTYNUMBERPROPERTY`
+- `DataSet.CURRENTSTAGEPROPERTY`
+- `DataSet.CURRENTSTAGECODEPROP`
+- `DataSet.HOUSINGMANAGERPROPERTY`
+- `DataSet.HOUSINGMANAGERPROPDESC`
+- `DataSet.HOUSINGPROGRAMPROPERTY`
+- `DataSet.HOUSINGPROGRAMPROPDESC`
+- `DataSet.PROPERTYPROGRAMPROPERTY`
+- `DataSet.PROPPROGRAMPROPDESC`
+- `DataSet.CRUSER1`
+- `DataSet.CRDATEI1`
+- `DataSet.CRTIMEI1`
+- `DataSet.CRTERM1`
+- `DataSet.CRWINDOW1`
+- `DataSet.LASTMODUSER`
+- `DataSet.LASTMODDATEI`
+- `DataSet.LASTMODTIMEI`
+- `DataSet.LASTMODTERM`
+- `DataSet.LASTMODWINDOW`
+- `DataSet.VERS1`
+- `TotalRecordCount`
+- `Key`
+- `Messages`
+- `DataSet.EVICTION_REASON_D`
+- `DataSet.EVICTION_REASON`
+- `data.EVICTION_REASON`
+
+Recommended future tenancy fields for vacancy detail enrichment:
+
+- `DataSet.TENANCYREFERENCE`
+  Useful as a user-facing tenancy identifier alongside `vacancy_start_tenancy_id` and `vacancy_end_tenancy_id`.
+- `DataSet.CURRENTSTAGE` and `DataSet.CURRENTSTAGECODE`
+  Useful only if operations want to audit tenancy lifecycle status around the vacancy.
+- `DataSet.TENANCYTYPEDESC`
+  Useful if management wants to analyze vacancy performance by tenancy type.
+- `DataSet.WHERENEXTHOUSEDDESC`
+  Useful only for operational context after tenancy exit. It is not part of vacancy-day logic.
+- `DataSet.OFFERACCEPTED` and `DataSet.DATEOFOFFER`
+  Potentially useful for a future reletting workflow view, but not required for the current vacancy calculation.
+- `DataSet.EVICTION_REASON_D`
+  Only useful if the business wants to separate eviction-related exits from other end-of-tenancy reasons.
+
+Current recommendation for the vacancy detail table:
+
+- keep the current tenancy ID and tenancy date fields,
+- add `TENANCYREFERENCE` later if users need a more readable tenancy identifier,
+- do not add rent, income, contact, or client fields to the vacancy detail table unless a separate business requirement is approved.
+
 ### 3. `Void`
 
 Purpose:
@@ -145,6 +230,8 @@ For vacancy detail reporting, the notebook also carries tenancy context into the
 - `vacancy_end_tenancy_id`, `vacancy_end_tenancy_start_date`, `vacancy_end_tenancy_end_date`
 
 These fields are derived by matching `Property.PROPERTYID` to `Tenancy.PROPID`.
+
+This is currently enough to explain how vacancy boundaries were derived. A future enhancement can also carry `vacancy_start_tenancy_reference` and `vacancy_end_tenancy_reference` if the business wants human-readable tenancy references in the detail table.
 
 ## Important Data Notes
 

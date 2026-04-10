@@ -102,6 +102,7 @@ The key rules are:
 - `tenancy_end_to_vacancy_start`
 - `next_tenancy_start_to_vacancy_end`
 - `property_start_to_vacancy_start`
+- `property_end_to_vacancy_end`
 
 Expected default behavior:
 
@@ -128,7 +129,7 @@ Before moving to the semantic model, validate the outputs with a small set of ex
 2. Confirm `Tenantable Days + Untenantable Days + Other Days = Vacancy Days`.
 3. Confirm `Other Days = 0` in the current version.
 4. Confirm properties with no earlier tenancy can still produce an initial vacancy.
-5. Confirm open vacancies use the notebook snapshot boundary.
+5. Confirm open vacancies are capped by the property end date, or use the notebook snapshot boundary if still active.
 6. Confirm a workbook example such as `2026-01-02` to `2026-03-31` returns `88` vacancy days, not `89`.
 7. Confirm the active rules displayed in `dim_active_vacancy_rule_parameters` match the intended maintenance change.
 

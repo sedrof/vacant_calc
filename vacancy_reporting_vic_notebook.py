@@ -30,6 +30,15 @@ DEFAULT_RULE_PARAMETERS = [
         "updated_at": "1900-01-01 00:00:00",
     },
     {
+        "rule_name": "property_end_to_vacancy_end",
+        "offset_days": 1,
+        "is_active": True,
+        "effective_from": "1900-01-01",
+        "comment": "Workbook logic: vacancy ends on property end date, technical exclusive boundary is +1 day.",
+        "updated_by": "notebook_bootstrap",
+        "updated_at": "1900-01-01 00:00:00",
+    },
+    {
         "rule_name": "property_start_to_vacancy_start",
         "offset_days": 0,
         "is_active": True,
@@ -155,6 +164,10 @@ TENANCY_END_TO_VACANCY_START_OFFSET_DAYS = rule_parameter_map.get(
 NEXT_TENANCY_START_TO_VACANCY_END_OFFSET_DAYS = rule_parameter_map.get(
     "next_tenancy_start_to_vacancy_end",
     -1,
+)
+PROPERTY_END_TO_VACANCY_END_OFFSET_DAYS = rule_parameter_map.get(
+    "property_end_to_vacancy_end",
+    1,
 )
 PROPERTY_START_TO_VACANCY_START_OFFSET_DAYS = rule_parameter_map.get(
     "property_start_to_vacancy_start",
@@ -449,6 +462,7 @@ first_tenancy = (
 
 ended_tenancy_vacancies = (
     tenancies_ordered.filter(F.col("tenancy_end_date").isNotNull())
+    .join(properties.select("property_id", "property_end_date").alias("p"), "property_id", "left")
     .select(
         "property_id",
         F.col("tenancy_id").alias("vacancy_start_tenancy_id"),
@@ -469,11 +483,21 @@ ended_tenancy_vacancies = (
             ),
         )
         .otherwise(snapshot_end_exclusive)
-        .alias("vacancy_end_exclusive"),
+        .alias("raw_vacancy_end_exclusive"),
+        F.col("p.property_end_date"),
         F.col("tenancy_end_reason_code").alias("vacancy_reason_code"),
         F.col("tenancy_end_reason").alias("vacancy_reason"),
         F.lit("tenancy_end").alias("vacancy_origin"),
     )
+    .withColumn(
+        "vacancy_end_exclusive",
+        F.when(
+            F.col("property_end_date").isNotNull()
+            & (F.date_add(F.col("property_end_date"), PROPERTY_END_TO_VACANCY_END_OFFSET_DAYS) < F.col("raw_vacancy_end_exclusive")),
+            F.date_add(F.col("property_end_date"), PROPERTY_END_TO_VACANCY_END_OFFSET_DAYS)
+        ).otherwise(F.col("raw_vacancy_end_exclusive"))
+    )
+    .drop("raw_vacancy_end_exclusive", "property_end_date")
     .filter(F.col("vacancy_start_date") < F.col("vacancy_end_exclusive"))
 )
 
@@ -500,11 +524,21 @@ initial_property_vacancies = (
             ),
         )
         .otherwise(snapshot_end_exclusive)
-        .alias("vacancy_end_exclusive"),
+        .alias("raw_vacancy_end_exclusive"),
+        F.col("p.property_end_date"),
         F.lit("NEW_PROPERTY").alias("vacancy_reason_code"),
         F.lit("Initial vacancy before first tenancy").alias("vacancy_reason"),
         F.lit("property_start").alias("vacancy_origin"),
     )
+    .withColumn(
+        "vacancy_end_exclusive",
+        F.when(
+            F.col("property_end_date").isNotNull()
+            & (F.date_add(F.col("property_end_date"), PROPERTY_END_TO_VACANCY_END_OFFSET_DAYS) < F.col("raw_vacancy_end_exclusive")),
+            F.date_add(F.col("property_end_date"), PROPERTY_END_TO_VACANCY_END_OFFSET_DAYS)
+        ).otherwise(F.col("raw_vacancy_end_exclusive"))
+    )
+    .drop("raw_vacancy_end_exclusive", "property_end_date")
     .filter(F.col("vacancy_start_date").isNotNull())
     .filter(F.col("vacancy_start_date") < F.col("vacancy_end_exclusive"))
 )

@@ -34,6 +34,7 @@ The workbook establishes the most important date rules:
 3. A new property vacancy starts from the property start date, not from a tenancy end.
 4. Void periods are a subset of the vacancy period.
 5. `Tenantable Days` are vacancy days that are not in a void period.
+6. A property's vacancy period permanently ends if the property ends (e.g., decommissioned). The vacancy inclusive end date stops on the `property_end_date`.
 
 The workbook does not count the start boundary day in `Vac days`.
 

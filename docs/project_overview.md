@@ -114,7 +114,7 @@ The implementation uses:
 - a Fabric notebook to build the reporting tables,
 - an existing shared `dim_date` table for date filtering,
 - a semantic model on top of those tables,
-- a Power BI report with summary, detail, audit, and config views.
+- a Power BI report with summary, detail, audit, config, and property-trace views.
 
 The date slicer filters the daily vacancy fact, and the detail visuals can then use overlap measures to control which vacancy rows are shown for the selected reporting window.
 
@@ -130,6 +130,10 @@ The notebook creates these reporting tables:
 - `vacancy_reporting.fact_vacancy_interval_vic`
 - `vacancy_reporting.fact_void_interval_vic`
 - `vacancy_reporting.stg_keys_vic`
+- `vacancy_reporting.audit_property_vic`
+- `vacancy_reporting.audit_tenancy_vic`
+- `vacancy_reporting.audit_void_vic`
+- `vacancy_reporting.audit_keys_vic`
 
 ## Scope Decisions
 

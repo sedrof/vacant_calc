@@ -17,6 +17,15 @@ This folder contains the working delivery documentation for the VIC vacancy repo
 6. `../vacancy_rule_parameter_maintenance_notebook.py`
    Notebook-style script for reviewing and changing governed date-correction parameters.
 
+Additional implementation outputs:
+
+- `vacancy_reporting.audit_property_vic`
+- `vacancy_reporting.audit_tenancy_vic`
+- `vacancy_reporting.audit_void_vic`
+- `vacancy_reporting.audit_keys_vic`
+
+These audit tables are for the `Property Trace` page and for source-vs-derived validation. They do not replace the current management reporting tables.
+
 Recommended usage:
 
 - review current active rules first,

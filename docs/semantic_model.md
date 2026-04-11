@@ -21,6 +21,10 @@ Load these tables from Fabric:
 - `vacancy_reporting.fact_vacancy_day_vic`
 - `vacancy_reporting.fact_vacancy_interval_vic`
 - `vacancy_reporting.fact_void_interval_vic`
+- `vacancy_reporting.audit_property_vic`
+- `vacancy_reporting.audit_tenancy_vic`
+- `vacancy_reporting.audit_void_vic`
+- `vacancy_reporting.audit_keys_vic`
 
 ## Recommended Relationships
 
@@ -29,12 +33,17 @@ Create these relationships:
 - `dim_date[date]` 1:* `fact_vacancy_day_vic[vacancy_date]`
 - `dim_property_vic[property_id]` 1:* `fact_vacancy_interval_vic[property_id]`
 - `fact_vacancy_interval_vic[vacancy_id]` 1:* `fact_vacancy_day_vic[vacancy_id]`
+- `dim_property_vic[property_id]` to `audit_property_vic[property_id]`
+- `dim_property_vic[property_id]` 1:* `audit_tenancy_vic[property_id]`
+- `dim_property_vic[property_id]` 1:* `audit_void_vic[property_id]`
+- `dim_property_vic[property_id]` 1:* `audit_keys_vic[property_id]`
 
 Relationship settings:
 
 - Do not create a direct active relationship from `dim_property_vic[property_id]` to `fact_vacancy_day_vic[property_id]`.
 - Use `Both` cross-filter direction on `fact_vacancy_interval_vic[vacancy_id]` to `fact_vacancy_day_vic[vacancy_id]`.
 - Keep all other relationships single direction.
+- For `audit_property_vic`, accept `1:1` if the modeling tool infers it. Single direction from `dim_property_vic` is still the intended behavior.
 - Do not relate `dim_active_vacancy_rule_parameters` to the rest of the model. It is a display and governance table.
 - Do not create a separate active relationship to `stg_keys_vic` for the report model. Keys fields are already embedded into `fact_vacancy_interval_vic`.
 
@@ -285,6 +294,42 @@ From `dim_active_vacancy_rule_parameters`:
 - `updated_by`
 - `updated_at`
 
+From the `audit_*` tables, expose the fields needed for the `Property Trace` page:
+
+- `audit_property_vic[property_id]`
+- `audit_property_vic[property_number]`
+- `audit_property_vic[property_short_address]`
+- `audit_property_vic[raw_effective_property_start_date]`
+- `audit_property_vic[property_start_date]`
+- `audit_property_vic[raw_property_end_date]`
+- `audit_property_vic[property_end_date]`
+- `audit_property_vic[source_date_offset_days]`
+- `audit_tenancy_vic[tenancy_id]`
+- `audit_tenancy_vic[tenancy_reference]`
+- `audit_tenancy_vic[raw_tenancy_start_date]`
+- `audit_tenancy_vic[tenancy_start_date]`
+- `audit_tenancy_vic[raw_tenancy_end_date]`
+- `audit_tenancy_vic[tenancy_end_date]`
+- `audit_tenancy_vic[tenancy_end_reason]`
+- `audit_tenancy_vic[source_date_offset_days]`
+- `audit_void_vic[void_id]`
+- `audit_void_vic[void_reference]`
+- `audit_void_vic[raw_void_start_date]`
+- `audit_void_vic[void_start_date]`
+- `audit_void_vic[raw_void_end_date]`
+- `audit_void_vic[void_end_date]`
+- `audit_void_vic[void_reason]`
+- `audit_void_vic[source_date_offset_days]`
+- `audit_keys_vic[key_id]`
+- `audit_keys_vic[key_reference]`
+- `audit_keys_vic[raw_date_received_from_tenant]`
+- `audit_keys_vic[date_received_from_tenant]`
+- `audit_keys_vic[raw_contractor_notified_date]`
+- `audit_keys_vic[contractor_notified_date]`
+- `audit_keys_vic[vacancy_exemptions_desc]`
+- `audit_keys_vic[property_condition]`
+- `audit_keys_vic[source_date_offset_days]`
+
 Hide technical columns such as codes, join keys that users do not need, and intermediate fields.
 
 ## Important Modeling Notes
@@ -300,6 +345,8 @@ Hide technical columns such as codes, join keys that users do not need, and inte
 - Keep the global `dim_date[date]` slicer. Do not replace it with slicers on `vacancy_start_date` or `vacancy_end_date`.
 - If a detail visual should show only vacancies relevant to the selected window, use a visual-level filter with `Vacancy Overlaps Selected Period = 1`.
 - If a visual should also respect property lifecycle overlap, add `Property Overlaps Selected Period = 1` as an additional visual-level filter.
+- The `Property Trace` page should be driven primarily by `property_id`, not by the global date slicer.
+- Keep the `audit_*` tables for validation and development use. Hide them from the main field list if you do not want management users to build visuals from them.
 
 ## Filter Mapping
 

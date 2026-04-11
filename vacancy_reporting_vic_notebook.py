@@ -102,6 +102,12 @@ def with_date(df, columns: list[str]):
     return df
 
 
+def with_raw_column_copies(df, columns: list[str]):
+    for column_name in columns:
+        df = df.withColumn(f"raw_{column_name}", F.col(column_name))
+    return df
+
+
 def shift_date_columns(df, columns: list[str], offset_days: int):
     if offset_days == 0:
         return df
@@ -282,6 +288,17 @@ properties = (
         )
     )
     .transform(
+        lambda df: with_raw_column_copies(
+            df,
+            [
+                "property_start_date",
+                "record_start_date",
+                "property_end_date",
+                "inactive_date",
+            ],
+        )
+    )
+    .transform(
         lambda df: shift_date_columns(
             df,
             [
@@ -297,6 +314,10 @@ properties = (
         "property_start_date",
         F.coalesce(F.col("property_start_date"), F.col("record_start_date")),
     )
+    .withColumn(
+        "raw_effective_property_start_date",
+        F.coalesce(F.col("raw_property_start_date"), F.col("raw_record_start_date")),
+    )
     .withColumn("property_id", F.col("property_id").cast("string"))
     .filter(F.upper(F.col("state")) == TARGET_STATE)
     .dropDuplicates(["property_id"])
@@ -306,6 +327,16 @@ tenancies = (
     load_table("Tenancy", tenancy_columns)
     .transform(
         lambda df: with_date(
+            df,
+            [
+                "tenancy_start_date",
+                "tenancy_end_date",
+                "inactive_date",
+            ],
+        )
+    )
+    .transform(
+        lambda df: with_raw_column_copies(
             df,
             [
                 "tenancy_start_date",
@@ -333,6 +364,7 @@ tenancies = (
 voids = (
     load_table("Void", void_columns)
     .transform(lambda df: with_date(df, ["void_start_date", "void_end_date"]))
+    .transform(lambda df: with_raw_column_copies(df, ["void_start_date", "void_end_date"]))
     .transform(
         lambda df: shift_date_columns(
             df,
@@ -364,6 +396,18 @@ keys = (
         )
     )
     .transform(
+        lambda df: with_raw_column_copies(
+            df,
+            [
+                "date_received_from_tenant",
+                "outgoing_inspection_date",
+                "contractor_notified_date",
+                "contractor_collect_key_date",
+                "contractor_return_key_date",
+            ],
+        )
+    )
+    .transform(
         lambda df: shift_date_columns(
             df,
             [
@@ -380,6 +424,16 @@ keys = (
     .withColumn("parent_engagement_id", F.col("parent_engagement_id").cast("string"))
     .withColumn("property_id", F.col("parent_engagement_id"))
     .withColumn(
+        "raw_key_anchor_date",
+        F.coalesce(
+            F.col("raw_date_received_from_tenant"),
+            F.col("raw_outgoing_inspection_date"),
+            F.col("raw_contractor_notified_date"),
+            F.col("raw_contractor_collect_key_date"),
+            F.col("raw_contractor_return_key_date"),
+        ),
+    )
+    .withColumn(
         "key_anchor_date",
         F.coalesce(
             F.col("date_received_from_tenant"),
@@ -390,6 +444,120 @@ keys = (
         ),
     )
     .filter(F.col("property_id").isNotNull())
+)
+
+
+audit_property_vic = (
+    properties.withColumn("report_state", F.lit(TARGET_STATE))
+    .withColumn("source_date_offset_days", F.lit(PROPERTY_SOURCE_DATE_OFFSET_DAYS))
+    .select(
+        "property_id",
+        "property_number",
+        "property_short_address",
+        "suburb",
+        "state",
+        "postcode",
+        "entity_code",
+        "entity",
+        "ownership_code",
+        "ownership",
+        "housing_program_code",
+        "housing_program",
+        "property_program_code",
+        "property_program",
+        "raw_property_start_date",
+        "raw_record_start_date",
+        "raw_effective_property_start_date",
+        "property_start_date",
+        "raw_property_end_date",
+        "property_end_date",
+        "raw_inactive_date",
+        "inactive_date",
+        "current_stage",
+        "current_stage_code",
+        "active_code",
+        "source_date_offset_days",
+        "report_state",
+    )
+)
+
+
+audit_tenancy_vic = (
+    tenancies.withColumn("report_state", F.lit(TARGET_STATE))
+    .withColumn("source_date_offset_days", F.lit(TENANCY_SOURCE_DATE_OFFSET_DAYS))
+    .select(
+        "property_id",
+        "tenancy_id",
+        "tenancy_reference",
+        "raw_tenancy_start_date",
+        "tenancy_start_date",
+        "raw_tenancy_end_date",
+        "tenancy_end_date",
+        "tenancy_end_reason_code",
+        "tenancy_end_reason",
+        "current_stage",
+        "current_stage_code",
+        "active_code",
+        "raw_inactive_date",
+        "inactive_date",
+        "source_date_offset_days",
+        "report_state",
+    )
+)
+
+
+audit_void_vic = (
+    voids.withColumn("report_state", F.lit(TARGET_STATE))
+    .withColumn("source_date_offset_days", F.lit(VOID_SOURCE_DATE_OFFSET_DAYS))
+    .select(
+        "property_id",
+        "void_id",
+        "void_reference",
+        "raw_void_start_date",
+        "void_start_date",
+        "raw_void_end_date",
+        "void_end_date",
+        "void_reason_code",
+        "void_reason",
+        "property_condition_code",
+        "property_condition",
+        "key_register_engagement_id",
+        "source_date_offset_days",
+        "report_state",
+    )
+)
+
+
+audit_keys_vic = (
+    keys.withColumn("report_state", F.lit(TARGET_STATE))
+    .withColumn("source_date_offset_days", F.lit(KEYS_SOURCE_DATE_OFFSET_DAYS))
+    .select(
+        "property_id",
+        "parent_engagement_id",
+        "key_id",
+        "key_reference",
+        "raw_date_received_from_tenant",
+        "date_received_from_tenant",
+        "raw_outgoing_inspection_date",
+        "outgoing_inspection_date",
+        "raw_contractor_notified_date",
+        "contractor_notified_date",
+        "raw_contractor_collect_key_date",
+        "contractor_collect_key_date",
+        "raw_contractor_return_key_date",
+        "contractor_return_key_date",
+        "raw_key_anchor_date",
+        "key_anchor_date",
+        "to_lockbox_onsite",
+        "contractor_name_comments",
+        "new_activated_property",
+        "vacancy_exemptions_code",
+        "vacancy_exemptions_desc",
+        "property_condition_code",
+        "property_condition",
+        "source_date_offset_days",
+        "report_state",
+    )
 )
 
 
@@ -907,6 +1075,10 @@ write_delta(void_intervals, "fact_void_interval_vic")
 write_delta(vacancy_day_fact, "fact_vacancy_day_vic")
 write_delta(fact_vacancy_interval_vic, "fact_vacancy_interval_vic")
 write_delta(keys_staged_vic, "stg_keys_vic")
+write_delta(audit_property_vic, "audit_property_vic")
+write_delta(audit_tenancy_vic, "audit_tenancy_vic")
+write_delta(audit_void_vic, "audit_void_vic")
+write_delta(audit_keys_vic, "audit_keys_vic")
 
 
 display(fact_vacancy_interval_vic.orderBy("property_id", "vacancy_start_date"))

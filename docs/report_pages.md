@@ -2,11 +2,12 @@
 
 ## Objective
 
-The report should support three reporting modes:
+The report should support four reporting modes:
 
 - management summary,
 - exportable operational detail,
 - audit and rule transparency.
+- property-level source trace and validation.
 
 This is not a presentation dashboard. Build it as a working operational report.
 
@@ -22,6 +23,10 @@ Use these model objects:
 - table `fact_vacancy_day_vic`
 - table `fact_void_interval_vic`
 - table `dim_active_vacancy_rule_parameters`
+- table `audit_property_vic`
+- table `audit_tenancy_vic`
+- table `audit_void_vic`
+- table `audit_keys_vic`
 
 Use these measures:
 
@@ -122,6 +127,11 @@ Settings:
 
 - style = `Dropdown`
 - multi-select = `On`
+
+Trace page note:
+
+- do not sync the global date slicer to the `Property Trace` page unless you explicitly want raw source rows hidden by the selected reporting window,
+- use a dedicated searchable property selector on the `Property Trace` page instead.
 
 ## Page 1: Summary
 
@@ -280,6 +290,8 @@ Field well:
 - `Columns` = `dim_property_vic[property_source]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_origin]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_reason]`
+- `Columns` = `dim_property_vic[property_start_date]`
+- `Columns` = `dim_property_vic[property_end_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_id]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_date]`
@@ -518,6 +530,259 @@ Field well:
 Add a text box with this wording:
 
 - `These parameters are maintained in Fabric and applied during notebook refresh. They are not report-side what-if settings.`
+
+## Page 5: Property Trace
+
+Purpose:
+
+- validate derived vacancy rows against source-aligned tables for one property,
+- support testing of date offsets and vacancy boundaries,
+- give future developers a clean trace page without changing the management pages.
+
+Page behavior:
+
+- do not sync the global `dim_date[date]` slicer to this page,
+- keep this page focused on one selected property at a time,
+- use a searchable property selector instead of a date selector as the primary filter.
+
+### Visual 1: Property selector
+
+Visual type:
+
+- `Slicer`
+
+Field well:
+
+- `Field` = `dim_property_vic[property_id]`
+
+Settings:
+
+- style = `Dropdown`
+- search = `On`
+- single select = `On`
+
+### Visual 2: Property snapshot table
+
+Visual type:
+
+- `Table`
+
+Field well:
+
+- `Columns` = `audit_property_vic[property_id]`
+- `Columns` = `audit_property_vic[property_number]`
+- `Columns` = `audit_property_vic[property_short_address]`
+- `Columns` = `audit_property_vic[entity]`
+- `Columns` = `audit_property_vic[ownership]`
+- `Columns` = `audit_property_vic[housing_program]`
+- `Columns` = `audit_property_vic[property_program]`
+- `Columns` = `audit_property_vic[raw_effective_property_start_date]`
+- `Columns` = `audit_property_vic[property_start_date]`
+- `Columns` = `audit_property_vic[raw_property_end_date]`
+- `Columns` = `audit_property_vic[property_end_date]`
+- `Columns` = `audit_property_vic[current_stage]`
+- `Columns` = `audit_property_vic[active_code]`
+- `Columns` = `audit_property_vic[source_date_offset_days]`
+
+Formatting:
+
+- rename `audit_property_vic[property_id]` display label to `Property ID`
+- rename `audit_property_vic[property_number]` display label to `Property Number`
+- rename `audit_property_vic[property_short_address]` display label to `Property Address`
+- rename `audit_property_vic[entity]` display label to `Entity`
+- rename `audit_property_vic[ownership]` display label to `Ownership`
+- rename `audit_property_vic[housing_program]` display label to `Housing Program`
+- rename `audit_property_vic[property_program]` display label to `Property Program`
+- rename `audit_property_vic[raw_effective_property_start_date]` display label to `Raw Property Start Date`
+- rename `audit_property_vic[property_start_date]` display label to `Adjusted Property Start Date`
+- rename `audit_property_vic[raw_property_end_date]` display label to `Raw Property End Date`
+- rename `audit_property_vic[property_end_date]` display label to `Adjusted Property End Date`
+- rename `audit_property_vic[current_stage]` display label to `Property Stage`
+- rename `audit_property_vic[active_code]` display label to `Property Active Code`
+- rename `audit_property_vic[source_date_offset_days]` display label to `Property Source Offset Days`
+
+### Visual 3: Tenancy trace table
+
+Visual type:
+
+- `Table`
+
+Field well:
+
+- `Columns` = `audit_tenancy_vic[property_id]`
+- `Columns` = `audit_tenancy_vic[tenancy_id]`
+- `Columns` = `audit_tenancy_vic[tenancy_reference]`
+- `Columns` = `audit_tenancy_vic[raw_tenancy_start_date]`
+- `Columns` = `audit_tenancy_vic[tenancy_start_date]`
+- `Columns` = `audit_tenancy_vic[raw_tenancy_end_date]`
+- `Columns` = `audit_tenancy_vic[tenancy_end_date]`
+- `Columns` = `audit_tenancy_vic[tenancy_end_reason]`
+- `Columns` = `audit_tenancy_vic[current_stage]`
+- `Columns` = `audit_tenancy_vic[active_code]`
+- `Columns` = `audit_tenancy_vic[source_date_offset_days]`
+
+Formatting:
+
+- sort by `audit_tenancy_vic[tenancy_start_date]` ascending
+- rename `audit_tenancy_vic[property_id]` display label to `Property ID`
+- rename `audit_tenancy_vic[tenancy_id]` display label to `Tenancy ID`
+- rename `audit_tenancy_vic[tenancy_reference]` display label to `Tenancy Reference`
+- rename `audit_tenancy_vic[raw_tenancy_start_date]` display label to `Raw Tenancy Start Date`
+- rename `audit_tenancy_vic[tenancy_start_date]` display label to `Adjusted Tenancy Start Date`
+- rename `audit_tenancy_vic[raw_tenancy_end_date]` display label to `Raw Tenancy End Date`
+- rename `audit_tenancy_vic[tenancy_end_date]` display label to `Adjusted Tenancy End Date`
+- rename `audit_tenancy_vic[tenancy_end_reason]` display label to `End Of Tenancy Reason`
+- rename `audit_tenancy_vic[current_stage]` display label to `Tenancy Stage`
+- rename `audit_tenancy_vic[active_code]` display label to `Tenancy Active Code`
+- rename `audit_tenancy_vic[source_date_offset_days]` display label to `Tenancy Source Offset Days`
+
+### Visual 4: Void trace table
+
+Visual type:
+
+- `Table`
+
+Field well:
+
+- `Columns` = `audit_void_vic[property_id]`
+- `Columns` = `audit_void_vic[void_id]`
+- `Columns` = `audit_void_vic[void_reference]`
+- `Columns` = `audit_void_vic[raw_void_start_date]`
+- `Columns` = `audit_void_vic[void_start_date]`
+- `Columns` = `audit_void_vic[raw_void_end_date]`
+- `Columns` = `audit_void_vic[void_end_date]`
+- `Columns` = `audit_void_vic[void_reason]`
+- `Columns` = `audit_void_vic[property_condition]`
+- `Columns` = `audit_void_vic[source_date_offset_days]`
+
+Formatting:
+
+- sort by `audit_void_vic[void_start_date]` ascending
+- rename `audit_void_vic[property_id]` display label to `Property ID`
+- rename `audit_void_vic[void_id]` display label to `Void ID`
+- rename `audit_void_vic[void_reference]` display label to `Void Reference`
+- rename `audit_void_vic[raw_void_start_date]` display label to `Raw Void Start Date`
+- rename `audit_void_vic[void_start_date]` display label to `Adjusted Void Start Date`
+- rename `audit_void_vic[raw_void_end_date]` display label to `Raw Void End Date`
+- rename `audit_void_vic[void_end_date]` display label to `Adjusted Void End Date`
+- rename `audit_void_vic[void_reason]` display label to `Void Reason`
+- rename `audit_void_vic[property_condition]` display label to `Void Property Condition`
+- rename `audit_void_vic[source_date_offset_days]` display label to `Void Source Offset Days`
+
+### Visual 5: Keys trace table
+
+Visual type:
+
+- `Table`
+
+Field well:
+
+- `Columns` = `audit_keys_vic[property_id]`
+- `Columns` = `audit_keys_vic[key_id]`
+- `Columns` = `audit_keys_vic[key_reference]`
+- `Columns` = `audit_keys_vic[raw_date_received_from_tenant]`
+- `Columns` = `audit_keys_vic[date_received_from_tenant]`
+- `Columns` = `audit_keys_vic[raw_outgoing_inspection_date]`
+- `Columns` = `audit_keys_vic[outgoing_inspection_date]`
+- `Columns` = `audit_keys_vic[raw_contractor_notified_date]`
+- `Columns` = `audit_keys_vic[contractor_notified_date]`
+- `Columns` = `audit_keys_vic[raw_contractor_collect_key_date]`
+- `Columns` = `audit_keys_vic[contractor_collect_key_date]`
+- `Columns` = `audit_keys_vic[raw_contractor_return_key_date]`
+- `Columns` = `audit_keys_vic[contractor_return_key_date]`
+- `Columns` = `audit_keys_vic[vacancy_exemptions_desc]`
+- `Columns` = `audit_keys_vic[property_condition]`
+- `Columns` = `audit_keys_vic[source_date_offset_days]`
+
+Formatting:
+
+- sort by `audit_keys_vic[key_anchor_date]` descending
+- rename `audit_keys_vic[property_id]` display label to `Property ID`
+- rename `audit_keys_vic[key_id]` display label to `Keys Record ID`
+- rename `audit_keys_vic[key_reference]` display label to `Keys Reference`
+- rename `audit_keys_vic[raw_date_received_from_tenant]` display label to `Raw Date Received From Tenant`
+- rename `audit_keys_vic[date_received_from_tenant]` display label to `Adjusted Date Received From Tenant`
+- rename `audit_keys_vic[raw_outgoing_inspection_date]` display label to `Raw Outgoing Inspection Date`
+- rename `audit_keys_vic[outgoing_inspection_date]` display label to `Adjusted Outgoing Inspection Date`
+- rename `audit_keys_vic[raw_contractor_notified_date]` display label to `Raw Contractor Notified Date`
+- rename `audit_keys_vic[contractor_notified_date]` display label to `Adjusted Contractor Notified Date`
+- rename `audit_keys_vic[raw_contractor_collect_key_date]` display label to `Raw Contractor Collected Key Date`
+- rename `audit_keys_vic[contractor_collect_key_date]` display label to `Adjusted Contractor Collected Key Date`
+- rename `audit_keys_vic[raw_contractor_return_key_date]` display label to `Raw Contractor Returned Key Date`
+- rename `audit_keys_vic[contractor_return_key_date]` display label to `Adjusted Contractor Returned Key Date`
+- rename `audit_keys_vic[vacancy_exemptions_desc]` display label to `Vacancy Exemption`
+- rename `audit_keys_vic[property_condition]` display label to `Property Condition`
+- rename `audit_keys_vic[source_date_offset_days]` display label to `Keys Source Offset Days`
+
+### Visual 6: Derived vacancy trace table
+
+Visual type:
+
+- `Table`
+
+Field well:
+
+- `Columns` = `fact_vacancy_interval_vic[vacancy_id]`
+- `Columns` = `fact_vacancy_interval_vic[property_id]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_origin]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_reason]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_id]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_start_date]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_id]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_start_date]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_end_exclusive]`
+- `Columns` = `fact_vacancy_interval_vic[void_id]`
+- `Columns` = `fact_vacancy_interval_vic[void_start_date]`
+- `Columns` = `fact_vacancy_interval_vic[void_end_date]`
+- `Columns` = `fact_vacancy_interval_vic[key_id]`
+- `Columns` = `[Vacancy Days]`
+- `Columns` = `[Tenantable Days]`
+- `Columns` = `[Untenantable Days]`
+
+Formatting:
+
+- sort by `fact_vacancy_interval_vic[vacancy_start_date]` ascending
+- rename `fact_vacancy_interval_vic[vacancy_id]` display label to `Vacancy ID`
+- rename `fact_vacancy_interval_vic[property_id]` display label to `Property ID`
+- rename `fact_vacancy_interval_vic[vacancy_origin]` display label to `Vacancy Origin`
+- rename `fact_vacancy_interval_vic[vacancy_reason]` display label to `Vacancy Reason`
+- rename `fact_vacancy_interval_vic[vacancy_start_tenancy_id]` display label to `Previous Tenancy ID`
+- rename `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]` display label to `Previous Tenancy End Date`
+- rename `fact_vacancy_interval_vic[vacancy_start_date]` display label to `Vacancy Start Date`
+- rename `fact_vacancy_interval_vic[vacancy_end_tenancy_id]` display label to `Next Tenancy ID`
+- rename `fact_vacancy_interval_vic[vacancy_end_tenancy_start_date]` display label to `Next Tenancy Start Date`
+- rename `fact_vacancy_interval_vic[vacancy_end_exclusive]` display label to `Vacancy End Boundary`
+- rename `fact_vacancy_interval_vic[void_id]` display label to `Selected Void ID`
+- rename `fact_vacancy_interval_vic[void_start_date]` display label to `Selected Void Start Date`
+- rename `fact_vacancy_interval_vic[void_end_date]` display label to `Selected Void End Date`
+- rename `fact_vacancy_interval_vic[key_id]` display label to `Selected Keys Record ID`
+
+### Visual 7: Vacancy day trace table
+
+Visual type:
+
+- `Table`
+
+Field well:
+
+- `Columns` = `fact_vacancy_day_vic[vacancy_id]`
+- `Columns` = `fact_vacancy_day_vic[vacancy_date]`
+- `Columns` = `fact_vacancy_day_vic[day_type]`
+- `Columns` = `fact_vacancy_day_vic[void_id]`
+- `Columns` = `fact_vacancy_day_vic[void_reason]`
+
+Formatting:
+
+- sort by `fact_vacancy_day_vic[vacancy_date]` ascending
+
+Trace usage notes:
+
+- start with one `property_id`
+- compare raw and adjusted dates in the audit tables first
+- then compare the derived vacancy boundaries
+- then use the day trace table only if the interval still looks wrong
+- this page is for validation and development, not for management export
 
 ## Report Notes
 

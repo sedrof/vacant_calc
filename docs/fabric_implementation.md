@@ -67,6 +67,10 @@ The notebook then writes these reporting tables:
 - `vacancy_reporting.fact_vacancy_interval_vic`
 - `vacancy_reporting.fact_void_interval_vic`
 - `vacancy_reporting.stg_keys_vic`
+- `vacancy_reporting.audit_property_vic`
+- `vacancy_reporting.audit_tenancy_vic`
+- `vacancy_reporting.audit_void_vic`
+- `vacancy_reporting.audit_keys_vic`
 
 The vacancy interval table also includes:
 
@@ -74,6 +78,12 @@ The vacancy interval table also includes:
 - one representative keys row per vacancy using the confirmed `PARENT_ENGAGEMENT_ID = property_id` mapping.
 - one representative overlapping void row per vacancy including `void_id`, `void_start_date`, `void_end_date`, and `void_reason`.
 - tenancy context for the tenancy that ends into the vacancy and the next tenancy that closes it, including tenancy IDs and tenancy start/end dates where available.
+
+The new `audit_*` tables are intentionally separate from the management tables:
+
+- they preserve source-aligned rows for property, tenancy, void, and keys,
+- they include raw and adjusted dates where relevant,
+- they support property-level trace and validation without changing the current report logic.
 
 ## Step 3: Validate The Parameter Table
 
@@ -132,6 +142,7 @@ Before moving to the semantic model, validate the outputs with a small set of ex
 5. Confirm open vacancies are capped by the property end date, or use the notebook snapshot boundary if still active.
 6. Confirm a workbook example such as `2026-01-02` to `2026-03-31` returns `88` vacancy days, not `89`.
 7. Confirm the active rules displayed in `dim_active_vacancy_rule_parameters` match the intended maintenance change.
+8. Confirm the new `audit_*` tables show both raw and adjusted dates for the same test property.
 
 If any of these checks fail, stop there and fix the notebook before continuing.
 
@@ -146,6 +157,7 @@ Important design choice:
 - property should filter day-level rows through `fact_vacancy_interval_vic`, not through a second direct property-to-day relationship.
 - use the existing physical `dim_date` table in Fabric, not a DAX-generated calendar table.
 - for detail visuals, use overlap measures to control which vacancy or property rows remain visible for the selected date window.
+- add direct `property_id` relationships from `dim_property_vic` to the new `audit_*` tables for the trace page.
 
 Keep the model auditable and avoid report-only logic that duplicates the notebook rules.
 
@@ -158,7 +170,8 @@ The report should include:
 - a summary page,
 - a vacancy detail page,
 - an audit page,
-- a config page showing active rule parameters.
+- a config page showing active rule parameters,
+- a property trace page for source-vs-derived validation.
 
 The report is operational and regulatory. Keep the layout clear and export-friendly.
 
@@ -170,6 +183,16 @@ Use this order whenever source data or rule parameters change:
 2. Run `../vacancy_reporting_vic_notebook.py`.
 3. Refresh the semantic model.
 4. Validate the report outputs.
+
+For property-trace testing after a notebook change:
+
+1. choose one test `property_id`,
+2. review `audit_property_vic`,
+3. review `audit_tenancy_vic`,
+4. review `audit_void_vic`,
+5. review `audit_keys_vic`,
+6. compare those rows to `fact_vacancy_interval_vic`,
+7. only then inspect `fact_vacancy_day_vic` if the interval still looks wrong.
 
 Do not change offsets in the report itself for the official reporting process.
 

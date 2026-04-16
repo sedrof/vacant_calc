@@ -150,6 +150,7 @@ Before moving to the semantic model, validate the outputs with a small set of ex
 7. Confirm the active rules displayed in `dim_active_vacancy_rule_parameters` match the intended maintenance change.
 8. Confirm the new `audit_*` tables show both raw and adjusted dates for the same test property.
 9. Confirm `audit_exceptions_vic` returns expected records for known bad source scenarios and stays empty for clean test properties.
+10. Confirm `Property Type`, `Property Program`, and `Property Current Stage` are populated consistently across `dim_property_vic`, the `audit_*` tables, and `fact_vacancy_interval_vic`.
 
 If any of these checks fail, stop there and fix the notebook before continuing.
 

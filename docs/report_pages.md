@@ -290,6 +290,9 @@ Field well:
 - `Columns` = `dim_property_vic[entity]`
 - `Columns` = `dim_property_vic[ownership]`
 - `Columns` = `dim_property_vic[housing_program]`
+- `Columns` = `dim_property_vic[property_type]`
+- `Columns` = `dim_property_vic[property_program]`
+- `Columns` = `dim_property_vic[current_stage]`
 - `Columns` = `dim_property_vic[property_source]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_origin]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_reason]`
@@ -337,6 +340,9 @@ Formatting:
 - rename `dim_property_vic[entity]` display label to `Entity`
 - rename `dim_property_vic[ownership]` display label to `Ownership`
 - rename `dim_property_vic[housing_program]` display label to `Housing Program`
+- rename `dim_property_vic[property_type]` display label to `Property Type`
+- rename `dim_property_vic[property_program]` display label to `Property Program`
+- rename `dim_property_vic[current_stage]` display label to `Property Current Stage`
 - rename `dim_property_vic[property_source]` display label to `Property Source`
 - rename `fact_vacancy_interval_vic[vacancy_origin]` display label to `Vacancy Origin`
 - rename `fact_vacancy_interval_vic[vacancy_reason]` display label to `Vacancy Reason`
@@ -388,6 +394,9 @@ Recommended final column order for management:
 - `Entity`
 - `Ownership`
 - `Housing Program`
+- `Property Type`
+- `Property Program`
+- `Property Current Stage`
 - `Property Source`
 - `Vacancy Origin`
 - `Vacancy Reason`
@@ -592,6 +601,7 @@ Field well:
 - `Columns` = `audit_property_vic[entity]`
 - `Columns` = `audit_property_vic[ownership]`
 - `Columns` = `audit_property_vic[housing_program]`
+- `Columns` = `audit_property_vic[property_type]`
 - `Columns` = `audit_property_vic[property_program]`
 - `Columns` = `audit_property_vic[raw_effective_property_start_date]`
 - `Columns` = `audit_property_vic[property_start_date]`
@@ -609,12 +619,13 @@ Formatting:
 - rename `audit_property_vic[entity]` display label to `Entity`
 - rename `audit_property_vic[ownership]` display label to `Ownership`
 - rename `audit_property_vic[housing_program]` display label to `Housing Program`
+- rename `audit_property_vic[property_type]` display label to `Property Type`
 - rename `audit_property_vic[property_program]` display label to `Property Program`
 - rename `audit_property_vic[raw_effective_property_start_date]` display label to `Raw Property Start Date`
 - rename `audit_property_vic[property_start_date]` display label to `Adjusted Property Start Date`
 - rename `audit_property_vic[raw_property_end_date]` display label to `Raw Property End Date`
 - rename `audit_property_vic[property_end_date]` display label to `Adjusted Property End Date`
-- rename `audit_property_vic[current_stage]` display label to `Property Stage`
+- rename `audit_property_vic[current_stage]` display label to `Property Current Stage`
 - rename `audit_property_vic[active_code]` display label to `Property Active Code`
 - rename `audit_property_vic[source_date_offset_days]` display label to `Property Source Offset Days`
 
@@ -629,6 +640,9 @@ Field well:
 - `Columns` = `audit_tenancy_vic[property_id]`
 - `Columns` = `audit_tenancy_vic[tenancy_id]`
 - `Columns` = `audit_tenancy_vic[tenancy_reference]`
+- `Columns` = `audit_tenancy_vic[property_type]`
+- `Columns` = `audit_tenancy_vic[property_program]`
+- `Columns` = `audit_tenancy_vic[property_current_stage]`
 - `Columns` = `audit_tenancy_vic[raw_tenancy_start_date]`
 - `Columns` = `audit_tenancy_vic[tenancy_start_date]`
 - `Columns` = `audit_tenancy_vic[raw_tenancy_end_date]`
@@ -644,6 +658,9 @@ Formatting:
 - rename `audit_tenancy_vic[property_id]` display label to `Property ID`
 - rename `audit_tenancy_vic[tenancy_id]` display label to `Tenancy ID`
 - rename `audit_tenancy_vic[tenancy_reference]` display label to `Tenancy Reference`
+- rename `audit_tenancy_vic[property_type]` display label to `Property Type`
+- rename `audit_tenancy_vic[property_program]` display label to `Property Program`
+- rename `audit_tenancy_vic[property_current_stage]` display label to `Property Current Stage`
 - rename `audit_tenancy_vic[raw_tenancy_start_date]` display label to `Raw Tenancy Start Date`
 - rename `audit_tenancy_vic[tenancy_start_date]` display label to `Adjusted Tenancy Start Date`
 - rename `audit_tenancy_vic[raw_tenancy_end_date]` display label to `Raw Tenancy End Date`
@@ -664,6 +681,9 @@ Field well:
 - `Columns` = `audit_void_vic[property_id]`
 - `Columns` = `audit_void_vic[void_id]`
 - `Columns` = `audit_void_vic[void_reference]`
+- `Columns` = `audit_void_vic[property_type]`
+- `Columns` = `audit_void_vic[property_program]`
+- `Columns` = `audit_void_vic[property_current_stage]`
 - `Columns` = `audit_void_vic[raw_void_start_date]`
 - `Columns` = `audit_void_vic[void_start_date]`
 - `Columns` = `audit_void_vic[raw_void_end_date]`
@@ -678,6 +698,9 @@ Formatting:
 - rename `audit_void_vic[property_id]` display label to `Property ID`
 - rename `audit_void_vic[void_id]` display label to `Void ID`
 - rename `audit_void_vic[void_reference]` display label to `Void Reference`
+- rename `audit_void_vic[property_type]` display label to `Property Type`
+- rename `audit_void_vic[property_program]` display label to `Property Program`
+- rename `audit_void_vic[property_current_stage]` display label to `Property Current Stage`
 - rename `audit_void_vic[raw_void_start_date]` display label to `Raw Void Start Date`
 - rename `audit_void_vic[void_start_date]` display label to `Adjusted Void Start Date`
 - rename `audit_void_vic[raw_void_end_date]` display label to `Raw Void End Date`
@@ -697,6 +720,9 @@ Field well:
 - `Columns` = `audit_keys_vic[property_id]`
 - `Columns` = `audit_keys_vic[key_id]`
 - `Columns` = `audit_keys_vic[key_reference]`
+- `Columns` = `audit_keys_vic[property_type]`
+- `Columns` = `audit_keys_vic[property_program]`
+- `Columns` = `audit_keys_vic[property_current_stage]`
 - `Columns` = `audit_keys_vic[raw_date_received_from_tenant]`
 - `Columns` = `audit_keys_vic[date_received_from_tenant]`
 - `Columns` = `audit_keys_vic[raw_outgoing_inspection_date]`
@@ -717,6 +743,9 @@ Formatting:
 - rename `audit_keys_vic[property_id]` display label to `Property ID`
 - rename `audit_keys_vic[key_id]` display label to `Keys Record ID`
 - rename `audit_keys_vic[key_reference]` display label to `Keys Reference`
+- rename `audit_keys_vic[property_type]` display label to `Property Type`
+- rename `audit_keys_vic[property_program]` display label to `Property Program`
+- rename `audit_keys_vic[property_current_stage]` display label to `Property Current Stage`
 - rename `audit_keys_vic[raw_date_received_from_tenant]` display label to `Raw Date Received From Tenant`
 - rename `audit_keys_vic[date_received_from_tenant]` display label to `Adjusted Date Received From Tenant`
 - rename `audit_keys_vic[raw_outgoing_inspection_date]` display label to `Raw Outgoing Inspection Date`
@@ -741,6 +770,9 @@ Field well:
 
 - `Columns` = `fact_vacancy_interval_vic[vacancy_id]`
 - `Columns` = `fact_vacancy_interval_vic[property_id]`
+- `Columns` = `fact_vacancy_interval_vic[property_type]`
+- `Columns` = `fact_vacancy_interval_vic[property_program]`
+- `Columns` = `fact_vacancy_interval_vic[current_stage]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_origin]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_reason]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_id]`
@@ -762,6 +794,9 @@ Formatting:
 - sort by `fact_vacancy_interval_vic[vacancy_start_date]` ascending
 - rename `fact_vacancy_interval_vic[vacancy_id]` display label to `Vacancy ID`
 - rename `fact_vacancy_interval_vic[property_id]` display label to `Property ID`
+- rename `fact_vacancy_interval_vic[property_type]` display label to `Property Type`
+- rename `fact_vacancy_interval_vic[property_program]` display label to `Property Program`
+- rename `fact_vacancy_interval_vic[current_stage]` display label to `Property Current Stage`
 - rename `fact_vacancy_interval_vic[vacancy_origin]` display label to `Vacancy Origin`
 - rename `fact_vacancy_interval_vic[vacancy_reason]` display label to `Vacancy Reason`
 - rename `fact_vacancy_interval_vic[vacancy_start_tenancy_id]` display label to `Previous Tenancy ID`
@@ -889,6 +924,7 @@ Field well:
 - `Columns` = `audit_exceptions_vic[entity]`
 - `Columns` = `audit_exceptions_vic[ownership]`
 - `Columns` = `audit_exceptions_vic[housing_program]`
+- `Columns` = `audit_exceptions_vic[property_type]`
 - `Columns` = `audit_exceptions_vic[property_program]`
 - `Columns` = `audit_exceptions_vic[current_stage]`
 - `Columns` = `audit_exceptions_vic[tenancy_id]`
@@ -920,6 +956,7 @@ Formatting:
 - rename `audit_exceptions_vic[entity]` display label to `Entity`
 - rename `audit_exceptions_vic[ownership]` display label to `Ownership`
 - rename `audit_exceptions_vic[housing_program]` display label to `Housing Program`
+- rename `audit_exceptions_vic[property_type]` display label to `Property Type`
 - rename `audit_exceptions_vic[property_program]` display label to `Property Program`
 - rename `audit_exceptions_vic[current_stage]` display label to `Property Current Stage`
 - rename `audit_exceptions_vic[tenancy_id]` display label to `Tenancy ID`

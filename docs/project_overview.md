@@ -144,6 +144,7 @@ These decisions are intentional and should not be changed without evidence:
 - `Keys.PARENT_ENGAGEMENT_ID` is confirmed as `property_id`.
 - The vacancy interval output includes overlapping void start/end values and a representative keys row per vacancy.
 - The vacancy interval output also includes tenancy context for the tenancy that ended into the vacancy and the next tenancy that closed it, using `Property.PROPERTYID = Tenancy.PROPID`.
+- Property-facing outputs now also carry `Property Type`, `Property Program`, and `Property Current Stage` so the detail, trace, and exception pages can show consistent property context.
 - The solution also publishes an exception table for known invalid source patterns such as tenancy intervals overlapping void intervals for the same property.
 - `Other Days` remains `0` because no valid source rule has been confirmed.
 - `Property Program` is currently used as `Property Source`.

@@ -217,6 +217,8 @@ property_columns = [
     ("DataSet.OWNERSHIPD", "ownership"),
     ("DataSet.HOUSINGPROGRAM", "housing_program_code"),
     ("DataSet.HOUSINGPROGRAMD", "housing_program"),
+    ("DataSet.PROPERTYTYPE", "property_type_code"),
+    ("DataSet.PROPERTYTYPED", "property_type"),
     ("DataSet.PROPERTYPROGRAM", "property_program_code"),
     ("DataSet.PROPERTYPROGRAMD", "property_program"),
     ("DataSet.PROPERTYSTARTDATE", "property_start_date"),
@@ -463,6 +465,8 @@ audit_property_vic = (
         "ownership",
         "housing_program_code",
         "housing_program",
+        "property_type_code",
+        "property_type",
         "property_program_code",
         "property_program",
         "raw_property_start_date",
@@ -483,10 +487,29 @@ audit_property_vic = (
 
 
 audit_tenancy_vic = (
-    tenancies.withColumn("report_state", F.lit(TARGET_STATE))
+    tenancies.join(
+        properties.select(
+            "property_id",
+            "property_type_code",
+            "property_type",
+            F.col("property_program_code").alias("property_program_code"),
+            F.col("property_program").alias("property_program"),
+            F.col("current_stage").alias("property_current_stage"),
+            F.col("current_stage_code").alias("property_current_stage_code"),
+        ),
+        "property_id",
+        "left",
+    )
+    .withColumn("report_state", F.lit(TARGET_STATE))
     .withColumn("source_date_offset_days", F.lit(TENANCY_SOURCE_DATE_OFFSET_DAYS))
     .select(
         "property_id",
+        "property_type_code",
+        "property_type",
+        "property_program_code",
+        "property_program",
+        "property_current_stage",
+        "property_current_stage_code",
         "tenancy_id",
         "tenancy_reference",
         "raw_tenancy_start_date",
@@ -495,8 +518,6 @@ audit_tenancy_vic = (
         "tenancy_end_date",
         "tenancy_end_reason_code",
         "tenancy_end_reason",
-        "current_stage",
-        "current_stage_code",
         "active_code",
         "raw_inactive_date",
         "inactive_date",
@@ -507,10 +528,29 @@ audit_tenancy_vic = (
 
 
 audit_void_vic = (
-    voids.withColumn("report_state", F.lit(TARGET_STATE))
+    voids.join(
+        properties.select(
+            "property_id",
+            "property_type_code",
+            "property_type",
+            F.col("property_program_code").alias("property_program_code"),
+            F.col("property_program").alias("property_program"),
+            F.col("current_stage").alias("property_current_stage"),
+            F.col("current_stage_code").alias("property_current_stage_code"),
+        ),
+        "property_id",
+        "left",
+    )
+    .withColumn("report_state", F.lit(TARGET_STATE))
     .withColumn("source_date_offset_days", F.lit(VOID_SOURCE_DATE_OFFSET_DAYS))
     .select(
         "property_id",
+        "property_type_code",
+        "property_type",
+        "property_program_code",
+        "property_program",
+        "property_current_stage",
+        "property_current_stage_code",
         "void_id",
         "void_reference",
         "raw_void_start_date",
@@ -529,10 +569,29 @@ audit_void_vic = (
 
 
 audit_keys_vic = (
-    keys.withColumn("report_state", F.lit(TARGET_STATE))
+    keys.join(
+        properties.select(
+            "property_id",
+            "property_type_code",
+            "property_type",
+            F.col("property_program_code").alias("property_program_code"),
+            F.col("property_program").alias("property_program"),
+            F.col("current_stage").alias("property_current_stage"),
+            F.col("current_stage_code").alias("property_current_stage_code"),
+        ),
+        "property_id",
+        "left",
+    )
+    .withColumn("report_state", F.lit(TARGET_STATE))
     .withColumn("source_date_offset_days", F.lit(KEYS_SOURCE_DATE_OFFSET_DAYS))
     .select(
         "property_id",
+        "property_type_code",
+        "property_type",
+        "property_program_code",
+        "property_program",
+        "property_current_stage",
+        "property_current_stage_code",
         "parent_engagement_id",
         "key_id",
         "key_reference",
@@ -564,6 +623,8 @@ audit_keys_vic = (
 dim_property_vic = (
     properties.withColumnRenamed("property_program", "property_source")
     .withColumnRenamed("property_program_code", "property_source_code")
+    .withColumn("property_program", F.col("property_source"))
+    .withColumn("property_program_code", F.col("property_source_code"))
     .withColumn("report_state", F.lit(TARGET_STATE))
     .select(
         "property_id",
@@ -578,6 +639,10 @@ dim_property_vic = (
         "ownership",
         "housing_program_code",
         "housing_program",
+        "property_type_code",
+        "property_type",
+        "property_program_code",
+        "property_program",
         "property_source_code",
         "property_source",
         "property_start_date",
@@ -797,6 +862,7 @@ tenancy_interval_exceptions = (
             "entity",
             "ownership",
             "housing_program",
+            "property_type",
             "property_program",
             "current_stage",
         ),
@@ -853,6 +919,7 @@ tenancy_interval_exceptions = (
         "entity",
         "ownership",
         "housing_program",
+        "property_type",
         "property_program",
         "current_stage",
         "tenancy_id",
@@ -1017,7 +1084,10 @@ vacancy_days = (
         "entity",
         "ownership",
         "housing_program",
+        "property_type",
+        "property_program",
         "property_source",
+        "current_stage",
         "vacancy_origin",
         "vacancy_reason_code",
         "vacancy_reason",
@@ -1100,7 +1170,10 @@ vacancy_day_fact = (
         "entity",
         "ownership",
         "housing_program",
+        "property_type",
+        "property_program",
         "property_source",
+        "current_stage",
         "vacancy_origin",
         "vacancy_reason_code",
         "vacancy_reason",
@@ -1155,7 +1228,10 @@ fact_vacancy_interval_vic = (
         "entity",
         "ownership",
         "housing_program",
+        "property_type",
+        "property_program",
         "property_source",
+        "current_stage",
         "vacancy_origin",
         "vacancy_reason_code",
         "vacancy_reason",

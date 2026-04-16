@@ -250,6 +250,9 @@ From `dim_property_vic`:
 - `entity`
 - `ownership`
 - `housing_program`
+- `property_type`
+- `property_program`
+- `current_stage`
 - `property_source`
 - `property_start_date`
 - `property_end_date`
@@ -258,6 +261,9 @@ From `fact_vacancy_interval_vic`:
 
 - `property_id`
 - `vacancy_id`
+- `property_type`
+- `property_program`
+- `current_stage`
 - `vacancy_origin`
 - `vacancy_reason`
 - `vacancy_start_tenancy_id`
@@ -314,6 +320,9 @@ From the `audit_*` tables, expose the fields needed for the `Property Trace` pag
 - `audit_property_vic[property_id]`
 - `audit_property_vic[property_number]`
 - `audit_property_vic[property_short_address]`
+- `audit_property_vic[property_type]`
+- `audit_property_vic[property_program]`
+- `audit_property_vic[current_stage]`
 - `audit_property_vic[raw_effective_property_start_date]`
 - `audit_property_vic[property_start_date]`
 - `audit_property_vic[raw_property_end_date]`
@@ -321,6 +330,9 @@ From the `audit_*` tables, expose the fields needed for the `Property Trace` pag
 - `audit_property_vic[source_date_offset_days]`
 - `audit_tenancy_vic[tenancy_id]`
 - `audit_tenancy_vic[tenancy_reference]`
+- `audit_tenancy_vic[property_type]`
+- `audit_tenancy_vic[property_program]`
+- `audit_tenancy_vic[property_current_stage]`
 - `audit_tenancy_vic[raw_tenancy_start_date]`
 - `audit_tenancy_vic[tenancy_start_date]`
 - `audit_tenancy_vic[raw_tenancy_end_date]`
@@ -329,6 +341,9 @@ From the `audit_*` tables, expose the fields needed for the `Property Trace` pag
 - `audit_tenancy_vic[source_date_offset_days]`
 - `audit_void_vic[void_id]`
 - `audit_void_vic[void_reference]`
+- `audit_void_vic[property_type]`
+- `audit_void_vic[property_program]`
+- `audit_void_vic[property_current_stage]`
 - `audit_void_vic[raw_void_start_date]`
 - `audit_void_vic[void_start_date]`
 - `audit_void_vic[raw_void_end_date]`
@@ -337,6 +352,9 @@ From the `audit_*` tables, expose the fields needed for the `Property Trace` pag
 - `audit_void_vic[source_date_offset_days]`
 - `audit_keys_vic[key_id]`
 - `audit_keys_vic[key_reference]`
+- `audit_keys_vic[property_type]`
+- `audit_keys_vic[property_program]`
+- `audit_keys_vic[property_current_stage]`
 - `audit_keys_vic[raw_date_received_from_tenant]`
 - `audit_keys_vic[date_received_from_tenant]`
 - `audit_keys_vic[raw_contractor_notified_date]`
@@ -356,6 +374,7 @@ From `audit_exceptions_vic`, expose the fields needed for the exception page:
 - `audit_exceptions_vic[entity]`
 - `audit_exceptions_vic[ownership]`
 - `audit_exceptions_vic[housing_program]`
+- `audit_exceptions_vic[property_type]`
 - `audit_exceptions_vic[property_program]`
 - `audit_exceptions_vic[current_stage]`
 - `audit_exceptions_vic[tenancy_id]`

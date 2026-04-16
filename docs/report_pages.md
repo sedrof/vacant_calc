@@ -889,6 +889,8 @@ Field well:
 - `Columns` = `audit_exceptions_vic[entity]`
 - `Columns` = `audit_exceptions_vic[ownership]`
 - `Columns` = `audit_exceptions_vic[housing_program]`
+- `Columns` = `audit_exceptions_vic[property_program]`
+- `Columns` = `audit_exceptions_vic[current_stage]`
 - `Columns` = `audit_exceptions_vic[tenancy_id]`
 - `Columns` = `audit_exceptions_vic[tenancy_reference]`
 - `Columns` = `audit_exceptions_vic[raw_tenancy_start_date]`
@@ -918,6 +920,8 @@ Formatting:
 - rename `audit_exceptions_vic[entity]` display label to `Entity`
 - rename `audit_exceptions_vic[ownership]` display label to `Ownership`
 - rename `audit_exceptions_vic[housing_program]` display label to `Housing Program`
+- rename `audit_exceptions_vic[property_program]` display label to `Property Program`
+- rename `audit_exceptions_vic[current_stage]` display label to `Property Current Stage`
 - rename `audit_exceptions_vic[tenancy_id]` display label to `Tenancy ID`
 - rename `audit_exceptions_vic[tenancy_reference]` display label to `Tenancy Reference`
 - rename `audit_exceptions_vic[raw_tenancy_start_date]` display label to `Raw Tenancy Start Date`

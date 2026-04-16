@@ -356,6 +356,8 @@ From `audit_exceptions_vic`, expose the fields needed for the exception page:
 - `audit_exceptions_vic[entity]`
 - `audit_exceptions_vic[ownership]`
 - `audit_exceptions_vic[housing_program]`
+- `audit_exceptions_vic[property_program]`
+- `audit_exceptions_vic[current_stage]`
 - `audit_exceptions_vic[tenancy_id]`
 - `audit_exceptions_vic[tenancy_reference]`
 - `audit_exceptions_vic[raw_tenancy_start_date]`

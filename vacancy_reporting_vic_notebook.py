@@ -790,7 +790,16 @@ tenancy_interval_exceptions = (
     .filter(F.col("void_start_date").isNotNull())
     .filter(F.col("overlap_start_date") < F.col("overlap_end_exclusive"))
     .join(
-        dim_property_vic.select("property_id", "property_number", "property_short_address", "entity", "ownership", "housing_program"),
+        properties.select(
+            "property_id",
+            "property_number",
+            "property_short_address",
+            "entity",
+            "ownership",
+            "housing_program",
+            "property_program",
+            "current_stage",
+        ),
         "property_id",
         "left",
     )
@@ -844,6 +853,8 @@ tenancy_interval_exceptions = (
         "entity",
         "ownership",
         "housing_program",
+        "property_program",
+        "current_stage",
         "tenancy_id",
         "tenancy_reference",
         "raw_tenancy_start_date",

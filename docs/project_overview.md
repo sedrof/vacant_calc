@@ -114,7 +114,7 @@ The implementation uses:
 - a Fabric notebook to build the reporting tables,
 - an existing shared `dim_date` table for date filtering,
 - a semantic model on top of those tables,
-- a Power BI report with summary, detail, audit, config, and property-trace views.
+- a Power BI report with summary, detail, audit, config, property-trace, and exception-monitor views.
 
 The date slicer filters the daily vacancy fact, and the detail visuals can then use overlap measures to control which vacancy rows are shown for the selected reporting window.
 
@@ -134,6 +134,7 @@ The notebook creates these reporting tables:
 - `vacancy_reporting.audit_tenancy_vic`
 - `vacancy_reporting.audit_void_vic`
 - `vacancy_reporting.audit_keys_vic`
+- `vacancy_reporting.audit_exceptions_vic`
 
 ## Scope Decisions
 
@@ -143,6 +144,7 @@ These decisions are intentional and should not be changed without evidence:
 - `Keys.PARENT_ENGAGEMENT_ID` is confirmed as `property_id`.
 - The vacancy interval output includes overlapping void start/end values and a representative keys row per vacancy.
 - The vacancy interval output also includes tenancy context for the tenancy that ended into the vacancy and the next tenancy that closed it, using `Property.PROPERTYID = Tenancy.PROPID`.
+- The solution also publishes an exception table for known invalid source patterns such as tenancy intervals overlapping void intervals for the same property.
 - `Other Days` remains `0` because no valid source rule has been confirmed.
 - `Property Program` is currently used as `Property Source`.
 

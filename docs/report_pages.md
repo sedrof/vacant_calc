@@ -27,6 +27,7 @@ Use these model objects:
 - table `audit_tenancy_vic`
 - table `audit_void_vic`
 - table `audit_keys_vic`
+- table `audit_exceptions_vic`
 
 Use these measures:
 
@@ -42,6 +43,7 @@ Use these measures:
 - `[Vacancies GT 48 Days]`
 - `[Pct LE 21 Days]`
 - `[Pct LE 48 Days]`
+- `[Exception Count]`
 
 ## Global Slicers
 
@@ -132,6 +134,7 @@ Trace page note:
 
 - do not sync the global date slicer to the `Property Trace` page unless you explicitly want raw source rows hidden by the selected reporting window,
 - use a dedicated searchable property selector on the `Property Trace` page instead.
+- do not sync the global date slicer to the `Exception Monitor` page either.
 
 ## Page 1: Summary
 
@@ -290,6 +293,7 @@ Field well:
 - `Columns` = `dim_property_vic[property_source]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_origin]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_reason]`
+- `Columns` = `fact_vacancy_interval_vic[has_exception_flag]`
 - `Columns` = `dim_property_vic[property_start_date]`
 - `Columns` = `dim_property_vic[property_end_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_id]`
@@ -305,6 +309,8 @@ Field well:
 - `Columns` = `fact_vacancy_interval_vic[void_reason]`
 - `Columns` = `fact_vacancy_interval_vic[overlap_void_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[overlap_void_end_date]`
+- `Columns` = `fact_vacancy_interval_vic[exception_count]`
+- `Columns` = `fact_vacancy_interval_vic[exception_types]`
 - `Columns` = `[Vacancy Days]`
 - `Columns` = `[Tenantable Days]`
 - `Columns` = `[Untenantable Days]`
@@ -334,6 +340,7 @@ Formatting:
 - rename `dim_property_vic[property_source]` display label to `Property Source`
 - rename `fact_vacancy_interval_vic[vacancy_origin]` display label to `Vacancy Origin`
 - rename `fact_vacancy_interval_vic[vacancy_reason]` display label to `Vacancy Reason`
+- rename `fact_vacancy_interval_vic[has_exception_flag]` display label to `Has Exception`
 - rename `fact_vacancy_interval_vic[vacancy_start_tenancy_id]` display label to `Previous Tenancy ID`
 - rename `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]` display label to `Previous Tenancy End Date`
 - rename `fact_vacancy_interval_vic[vacancy_start_date]` display label to `Vacancy Start Date`
@@ -349,6 +356,8 @@ Formatting:
 - rename `fact_vacancy_interval_vic[void_reason]` display label to `Void Reason`
 - rename `fact_vacancy_interval_vic[overlap_void_start_date]` display label to `Overall Void Start Date`
 - rename `fact_vacancy_interval_vic[overlap_void_end_date]` display label to `Overall Void End Date`
+- rename `fact_vacancy_interval_vic[exception_count]` display label to `Exception Count`
+- rename `fact_vacancy_interval_vic[exception_types]` display label to `Exception Types`
 - rename `[Vacancy Days]` display label to `Vacancy Days`
 - rename `[Tenantable Days]` display label to `Tenantable Days`
 - rename `[Untenantable Days]` display label to `Untenantable Days`
@@ -365,6 +374,11 @@ Formatting:
 - rename `fact_vacancy_interval_vic[key_contractor_name_comments]` display label to `Contractor Comments`
 - rename `fact_vacancy_interval_vic[key_contractor_return_key_date]` display label to `Contractor Returned Key Date`
 - set column widths manually for export readability
+- apply conditional formatting icons to `Has Exception`
+- icon rules:
+- if value is `1`, show red warning icon
+- if value is `0`, show no icon or green check based on team preference
+- if you do not want to show `0` and `1`, use icon-only formatting for this column
 
 Recommended final column order for management:
 
@@ -377,6 +391,7 @@ Recommended final column order for management:
 - `Property Source`
 - `Vacancy Origin`
 - `Vacancy Reason`
+- `Has Exception`
 - `Property Start Date`
 - `Property End Date`
 - `Previous Tenancy ID`
@@ -396,6 +411,8 @@ Recommended final column order for management:
 - `Void Reason`
 - `Overall Void Start Date`
 - `Overall Void End Date`
+- `Exception Count`
+- `Exception Types`
 - `Keys Record ID`
 - `Keys Reference`
 - `Vacancy Exemption`
@@ -791,3 +808,138 @@ Trace usage notes:
 - Keep the audit page plain and readable.
 - Add a tooltip or text note that the vacancy logic follows `Vacant Calc.xlsx`.
 - After any parameter change, rerun the main notebook and refresh the semantic model before relying on report output.
+
+## Page 6: Exception Monitor
+
+Purpose:
+
+- expose source records that break expected business logic,
+- support rapid data-quality review,
+- send the user to the `Property Trace` page for investigation.
+
+Current implemented exception rule:
+
+- `TENANCY_OVERLAPS_VOID`
+  A tenancy interval overlaps a void interval for the same property by at least one day.
+
+Page behavior:
+
+- do not sync the global `dim_date[date]` slicer to this page,
+- allow the entity, ownership, housing program, and property selectors to filter this page,
+- use this page as a queue of bad records, not as a management summary page.
+
+### Visual 1: Exception count card
+
+Visual type:
+
+- `Card`
+
+Field well:
+
+- `Data` = `[Exception Count]`
+
+Formatting:
+
+- display units = `None`
+
+### Visual 2: Exception type slicer
+
+Visual type:
+
+- `Slicer`
+
+Field well:
+
+- `Field` = `audit_exceptions_vic[exception_type]`
+
+Settings:
+
+- style = `Dropdown`
+- search = `On`
+
+### Visual 3: Exception severity slicer
+
+Visual type:
+
+- `Slicer`
+
+Field well:
+
+- `Field` = `audit_exceptions_vic[exception_severity]`
+
+Settings:
+
+- style = `Dropdown`
+- search = `On`
+
+### Visual 4: Exception table
+
+Visual type:
+
+- `Table`
+
+Field well:
+
+- `Columns` = `audit_exceptions_vic[exception_id]`
+- `Columns` = `audit_exceptions_vic[exception_type]`
+- `Columns` = `audit_exceptions_vic[exception_severity]`
+- `Columns` = `audit_exceptions_vic[property_id]`
+- `Columns` = `audit_exceptions_vic[property_number]`
+- `Columns` = `audit_exceptions_vic[property_short_address]`
+- `Columns` = `audit_exceptions_vic[entity]`
+- `Columns` = `audit_exceptions_vic[ownership]`
+- `Columns` = `audit_exceptions_vic[housing_program]`
+- `Columns` = `audit_exceptions_vic[tenancy_id]`
+- `Columns` = `audit_exceptions_vic[tenancy_reference]`
+- `Columns` = `audit_exceptions_vic[raw_tenancy_start_date]`
+- `Columns` = `audit_exceptions_vic[tenancy_start_date]`
+- `Columns` = `audit_exceptions_vic[raw_tenancy_end_date]`
+- `Columns` = `audit_exceptions_vic[tenancy_end_date]`
+- `Columns` = `audit_exceptions_vic[void_id]`
+- `Columns` = `audit_exceptions_vic[void_reference]`
+- `Columns` = `audit_exceptions_vic[raw_void_start_date]`
+- `Columns` = `audit_exceptions_vic[void_start_date]`
+- `Columns` = `audit_exceptions_vic[raw_void_end_date]`
+- `Columns` = `audit_exceptions_vic[void_end_date]`
+- `Columns` = `audit_exceptions_vic[overlap_start_date]`
+- `Columns` = `audit_exceptions_vic[overlap_end_date]`
+- `Columns` = `audit_exceptions_vic[overlap_days]`
+- `Columns` = `audit_exceptions_vic[exception_summary]`
+
+Formatting:
+
+- sort by `audit_exceptions_vic[overlap_days]` descending
+- rename `audit_exceptions_vic[exception_id]` display label to `Exception ID`
+- rename `audit_exceptions_vic[exception_type]` display label to `Exception Type`
+- rename `audit_exceptions_vic[exception_severity]` display label to `Severity`
+- rename `audit_exceptions_vic[property_id]` display label to `Property ID`
+- rename `audit_exceptions_vic[property_number]` display label to `Property Number`
+- rename `audit_exceptions_vic[property_short_address]` display label to `Property Address`
+- rename `audit_exceptions_vic[entity]` display label to `Entity`
+- rename `audit_exceptions_vic[ownership]` display label to `Ownership`
+- rename `audit_exceptions_vic[housing_program]` display label to `Housing Program`
+- rename `audit_exceptions_vic[tenancy_id]` display label to `Tenancy ID`
+- rename `audit_exceptions_vic[tenancy_reference]` display label to `Tenancy Reference`
+- rename `audit_exceptions_vic[raw_tenancy_start_date]` display label to `Raw Tenancy Start Date`
+- rename `audit_exceptions_vic[tenancy_start_date]` display label to `Adjusted Tenancy Start Date`
+- rename `audit_exceptions_vic[raw_tenancy_end_date]` display label to `Raw Tenancy End Date`
+- rename `audit_exceptions_vic[tenancy_end_date]` display label to `Adjusted Tenancy End Date`
+- rename `audit_exceptions_vic[void_id]` display label to `Void ID`
+- rename `audit_exceptions_vic[void_reference]` display label to `Void Reference`
+- rename `audit_exceptions_vic[raw_void_start_date]` display label to `Raw Void Start Date`
+- rename `audit_exceptions_vic[void_start_date]` display label to `Adjusted Void Start Date`
+- rename `audit_exceptions_vic[raw_void_end_date]` display label to `Raw Void End Date`
+- rename `audit_exceptions_vic[void_end_date]` display label to `Adjusted Void End Date`
+- rename `audit_exceptions_vic[overlap_start_date]` display label to `Overlap Start Date`
+- rename `audit_exceptions_vic[overlap_end_date]` display label to `Overlap End Date`
+- rename `audit_exceptions_vic[overlap_days]` display label to `Overlap Days`
+- rename `audit_exceptions_vic[exception_summary]` display label to `Exception Summary`
+- set column widths manually for readability
+- enable export to Excel
+
+Usage notes:
+
+- start with the exception table
+- sort by `Overlap Days`
+- click a `Property ID` and move to the `Property Trace` page for deeper investigation
+- keep this page for invalid-source monitoring, not for daily operational KPIs

@@ -8,12 +8,12 @@ CONFIG_TABLE = "cfg_vacancy_rule_parameters"
 
 # Safe default: inspect only.
 # Set to True only when you want to write changes.
-EXECUTE_CHANGES = False
+EXECUTE_CHANGES = True
 
 # Allowed values:
 # - "view_active"
 # - "apply_rule_updates"
-ACTION = "view_active"
+ACTION = "apply_rule_updates"
 
 # Replace these examples with the change set you actually want to apply.
 # Each entry becomes the new active row for that rule_name.
@@ -21,49 +21,49 @@ RULE_UPDATES = [
     {
         "rule_name": "property_source_date_offset",
         "offset_days": 1,
-        "effective_from": "2026-04-08",
+        "effective_from": "2020-04-08",
         "comment": "TechOne source dates are one day behind Australian business date.",
         "updated_by": "fabric_admin",
     },
     {
         "rule_name": "tenancy_source_date_offset",
         "offset_days": 1,
-        "effective_from": "2026-04-08",
+        "effective_from": "2020-04-08",
         "comment": "TechOne source dates are one day behind Australian business date.",
         "updated_by": "fabric_admin",
     },
     {
         "rule_name": "void_source_date_offset",
         "offset_days": 1,
-        "effective_from": "2026-04-08",
+        "effective_from": "2020-04-08",
         "comment": "TechOne source dates are one day behind Australian business date.",
         "updated_by": "fabric_admin",
     },
     {
         "rule_name": "keys_source_date_offset",
         "offset_days": 1,
-        "effective_from": "2026-04-08",
+        "effective_from": "2020-04-08",
         "comment": "TechOne source dates are one day behind Australian business date.",
         "updated_by": "fabric_admin",
     },
     {
         "rule_name": "tenancy_end_to_vacancy_start",
         "offset_days": 1,
-        "effective_from": "2026-04-08",
+        "effective_from": "2020-04-08",
         "comment": "Server is one day behind AU business date.",
         "updated_by": "fabric_admin",
     },
     {
         "rule_name": "next_tenancy_start_to_vacancy_end",
         "offset_days": -1,
-        "effective_from": "2026-04-08",
+        "effective_from": "2020-04-08",
         "comment": "Workbook boundary rule for inclusive vacancy end.",
         "updated_by": "fabric_admin",
     },
     {
         "rule_name": "property_end_to_vacancy_end",
         "offset_days": 1,
-        "effective_from": "2026-04-08",
+        "effective_from": "2020-04-08",
         "comment": "Vacancy inclusive end boundary stops on the property end date (+1 day offset for exclusive computing).",
         "updated_by": "fabric_admin",
     },

@@ -71,6 +71,7 @@ The notebook then writes these reporting tables:
 - `vacancy_reporting.audit_tenancy_vic`
 - `vacancy_reporting.audit_void_vic`
 - `vacancy_reporting.audit_keys_vic`
+- `vacancy_reporting.audit_exceptions_vic`
 
 The vacancy interval table also includes:
 
@@ -84,6 +85,11 @@ The new `audit_*` tables are intentionally separate from the management tables:
 - they preserve source-aligned rows for property, tenancy, void, and keys,
 - they include raw and adjusted dates where relevant,
 - they support property-level trace and validation without changing the current report logic.
+
+The exception table is also separate:
+
+- `audit_exceptions_vic` contains source/data-quality issues that should not occur under normal business logic,
+- the first implemented rule flags any tenancy interval that overlaps a void interval on the same property.
 
 ## Step 3: Validate The Parameter Table
 
@@ -143,6 +149,7 @@ Before moving to the semantic model, validate the outputs with a small set of ex
 6. Confirm a workbook example such as `2026-01-02` to `2026-03-31` returns `88` vacancy days, not `89`.
 7. Confirm the active rules displayed in `dim_active_vacancy_rule_parameters` match the intended maintenance change.
 8. Confirm the new `audit_*` tables show both raw and adjusted dates for the same test property.
+9. Confirm `audit_exceptions_vic` returns expected records for known bad source scenarios and stays empty for clean test properties.
 
 If any of these checks fail, stop there and fix the notebook before continuing.
 
@@ -158,6 +165,7 @@ Important design choice:
 - use the existing physical `dim_date` table in Fabric, not a DAX-generated calendar table.
 - for detail visuals, use overlap measures to control which vacancy or property rows remain visible for the selected date window.
 - add direct `property_id` relationships from `dim_property_vic` to the new `audit_*` tables for the trace page.
+- add a direct `property_id` relationship from `dim_property_vic` to `audit_exceptions_vic` for the exception page.
 
 Keep the model auditable and avoid report-only logic that duplicates the notebook rules.
 
@@ -172,6 +180,7 @@ The report should include:
 - an audit page,
 - a config page showing active rule parameters,
 - a property trace page for source-vs-derived validation.
+- an exception monitor page for invalid source patterns.
 
 The report is operational and regulatory. Keep the layout clear and export-friendly.
 
@@ -193,6 +202,12 @@ For property-trace testing after a notebook change:
 5. review `audit_keys_vic`,
 6. compare those rows to `fact_vacancy_interval_vic`,
 7. only then inspect `fact_vacancy_day_vic` if the interval still looks wrong.
+
+For exception monitoring after a notebook change:
+
+1. review `audit_exceptions_vic`,
+2. confirm any returned rows are genuine source issues,
+3. use the `Property Trace` page to inspect the affected property in detail.
 
 Do not change offsets in the report itself for the official reporting process.
 

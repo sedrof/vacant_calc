@@ -25,6 +25,7 @@ Load these tables from Fabric:
 - `vacancy_reporting.audit_tenancy_vic`
 - `vacancy_reporting.audit_void_vic`
 - `vacancy_reporting.audit_keys_vic`
+- `vacancy_reporting.audit_exceptions_vic`
 
 ## Recommended Relationships
 
@@ -37,6 +38,7 @@ Create these relationships:
 - `dim_property_vic[property_id]` 1:* `audit_tenancy_vic[property_id]`
 - `dim_property_vic[property_id]` 1:* `audit_void_vic[property_id]`
 - `dim_property_vic[property_id]` 1:* `audit_keys_vic[property_id]`
+- `dim_property_vic[property_id]` 1:* `audit_exceptions_vic[property_id]`
 
 Relationship settings:
 
@@ -222,6 +224,16 @@ IF (
 )
 ```
 
+```DAX
+Exception Count =
+COUNTROWS ( audit_exceptions_vic )
+```
+
+```DAX
+Vacancy Has Exception =
+MAX ( fact_vacancy_interval_vic[has_exception_flag] )
+```
+
 Use `Vacancy Overlaps Selected Period` as the main row-visibility filter on detail visuals that should only show vacancies relevant to the selected date window.
 
 Use `Property Overlaps Selected Period` only where the business explicitly wants to filter by property lifecycle overlap with the selected date window.
@@ -264,6 +276,9 @@ From `fact_vacancy_interval_vic`:
 - `void_reason`
 - `overlap_void_start_date`
 - `overlap_void_end_date`
+- `has_exception_flag`
+- `exception_count`
+- `exception_types`
 - `full_vacancy_days`
 - `full_tenantable_days`
 - `full_untenantable_days`
@@ -330,6 +345,34 @@ From the `audit_*` tables, expose the fields needed for the `Property Trace` pag
 - `audit_keys_vic[property_condition]`
 - `audit_keys_vic[source_date_offset_days]`
 
+From `audit_exceptions_vic`, expose the fields needed for the exception page:
+
+- `audit_exceptions_vic[exception_id]`
+- `audit_exceptions_vic[exception_type]`
+- `audit_exceptions_vic[exception_severity]`
+- `audit_exceptions_vic[property_id]`
+- `audit_exceptions_vic[property_number]`
+- `audit_exceptions_vic[property_short_address]`
+- `audit_exceptions_vic[entity]`
+- `audit_exceptions_vic[ownership]`
+- `audit_exceptions_vic[housing_program]`
+- `audit_exceptions_vic[tenancy_id]`
+- `audit_exceptions_vic[tenancy_reference]`
+- `audit_exceptions_vic[raw_tenancy_start_date]`
+- `audit_exceptions_vic[tenancy_start_date]`
+- `audit_exceptions_vic[raw_tenancy_end_date]`
+- `audit_exceptions_vic[tenancy_end_date]`
+- `audit_exceptions_vic[void_id]`
+- `audit_exceptions_vic[void_reference]`
+- `audit_exceptions_vic[raw_void_start_date]`
+- `audit_exceptions_vic[void_start_date]`
+- `audit_exceptions_vic[raw_void_end_date]`
+- `audit_exceptions_vic[void_end_date]`
+- `audit_exceptions_vic[overlap_start_date]`
+- `audit_exceptions_vic[overlap_end_date]`
+- `audit_exceptions_vic[overlap_days]`
+- `audit_exceptions_vic[exception_summary]`
+
 Hide technical columns such as codes, join keys that users do not need, and intermediate fields.
 
 ## Important Modeling Notes
@@ -347,6 +390,7 @@ Hide technical columns such as codes, join keys that users do not need, and inte
 - If a visual should also respect property lifecycle overlap, add `Property Overlaps Selected Period = 1` as an additional visual-level filter.
 - The `Property Trace` page should be driven primarily by `property_id`, not by the global date slicer.
 - Keep the `audit_*` tables for validation and development use. Hide them from the main field list if you do not want management users to build visuals from them.
+- The exception page should also be property-driven and should not rely on the global date slicer unless you add a separate date modeling pattern for exceptions.
 
 ## Filter Mapping
 

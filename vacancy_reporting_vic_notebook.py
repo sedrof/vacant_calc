@@ -757,6 +757,132 @@ void_intervals = (
 )
 
 
+tenancy_interval_exceptions = (
+    tenancies.alias("t")
+    .join(
+        void_intervals.alias("d"),
+        F.col("t.property_id") == F.col("d.property_id"),
+        "inner",
+    )
+    .select(
+        F.col("t.property_id").alias("property_id"),
+        F.col("t.tenancy_id").alias("tenancy_id"),
+        F.col("t.tenancy_reference").alias("tenancy_reference"),
+        F.col("t.raw_tenancy_start_date").alias("raw_tenancy_start_date"),
+        F.col("t.tenancy_start_date").alias("tenancy_start_date"),
+        F.col("t.raw_tenancy_end_date").alias("raw_tenancy_end_date"),
+        F.col("t.tenancy_end_date").alias("tenancy_end_date"),
+        F.col("d.void_id").alias("void_id"),
+        F.col("d.void_reference").alias("void_reference"),
+        F.col("d.raw_void_start_date").alias("raw_void_start_date"),
+        F.col("d.void_start_date").alias("void_start_date"),
+        F.col("d.raw_void_end_date").alias("raw_void_end_date"),
+        F.col("d.void_end_date").alias("void_end_date"),
+        F.col("d.void_end_exclusive").alias("void_end_exclusive"),
+    )
+    .withColumn(
+        "tenancy_end_exclusive",
+        F.coalesce(F.date_add(F.col("tenancy_end_date"), 1), snapshot_end_exclusive),
+    )
+    .withColumn("overlap_start_date", F.greatest(F.col("tenancy_start_date"), F.col("void_start_date")))
+    .withColumn("overlap_end_exclusive", F.least(F.col("tenancy_end_exclusive"), F.col("void_end_exclusive")))
+    .filter(F.col("tenancy_start_date").isNotNull())
+    .filter(F.col("void_start_date").isNotNull())
+    .filter(F.col("overlap_start_date") < F.col("overlap_end_exclusive"))
+    .join(
+        dim_property_vic.select("property_id", "property_number", "property_short_address", "entity", "ownership", "housing_program"),
+        "property_id",
+        "left",
+    )
+    .withColumn(
+        "exception_type",
+        F.lit("TENANCY_OVERLAPS_VOID"),
+    )
+    .withColumn(
+        "exception_severity",
+        F.lit("Error"),
+    )
+    .withColumn(
+        "overlap_end_date",
+        F.date_sub(F.col("overlap_end_exclusive"), 1),
+    )
+    .withColumn(
+        "overlap_days",
+        F.datediff(F.col("overlap_end_exclusive"), F.col("overlap_start_date")),
+    )
+    .withColumn(
+        "exception_summary",
+        F.concat_ws(
+            " ",
+            F.lit("Tenancy"),
+            F.col("tenancy_id"),
+            F.lit("overlaps void"),
+            F.col("void_id"),
+            F.lit("for"),
+            F.col("overlap_days").cast("string"),
+            F.lit("day(s)."),
+        ),
+    )
+    .withColumn(
+        "exception_id",
+        F.concat_ws(
+            "-",
+            F.lit("EXC"),
+            F.col("property_id"),
+            F.col("tenancy_id"),
+            F.col("void_id"),
+            F.date_format(F.col("overlap_start_date"), "yyyyMMdd"),
+        ),
+    )
+    .select(
+        "exception_id",
+        "exception_type",
+        "exception_severity",
+        "property_id",
+        "property_number",
+        "property_short_address",
+        "entity",
+        "ownership",
+        "housing_program",
+        "tenancy_id",
+        "tenancy_reference",
+        "raw_tenancy_start_date",
+        "tenancy_start_date",
+        "raw_tenancy_end_date",
+        "tenancy_end_date",
+        "void_id",
+        "void_reference",
+        "raw_void_start_date",
+        "void_start_date",
+        "raw_void_end_date",
+        "void_end_date",
+        "overlap_start_date",
+        "overlap_end_date",
+        "overlap_days",
+        "exception_summary",
+        F.lit(TARGET_STATE).alias("report_state"),
+    )
+)
+
+
+vacancy_exception_summary = (
+    vacancy_intervals.alias("v")
+    .join(
+        tenancy_interval_exceptions.alias("e"),
+        (F.col("v.property_id") == F.col("e.property_id"))
+        & (F.col("e.overlap_start_date") < F.col("v.vacancy_end_exclusive"))
+        & (F.date_add(F.col("e.overlap_end_date"), 1) > F.col("v.vacancy_start_date")),
+        "left",
+    )
+    .groupBy("v.vacancy_id")
+    .agg(
+        F.max(F.when(F.col("e.exception_id").isNotNull(), F.lit(1)).otherwise(F.lit(0))).alias("has_exception_flag"),
+        F.countDistinct("e.exception_id").alias("exception_count"),
+        F.concat_ws(", ", F.sort_array(F.collect_set("e.exception_type"))).alias("exception_types"),
+    )
+)
+
+
 vacancy_void_summary = (
     vacancy_intervals.alias("v")
     .join(
@@ -1036,6 +1162,7 @@ fact_vacancy_interval_vic = (
     .join(vacancy_void_summary, "vacancy_id", "left")
     .join(vacancy_void_selected, "vacancy_id", "left")
     .join(vacancy_keys_selected, "vacancy_id", "left")
+    .join(vacancy_exception_summary, "vacancy_id", "left")
     .join(vacancy_day_metrics, "vacancy_id", "left")
     .withColumn(
         "full_vacancy_days",
@@ -1052,6 +1179,8 @@ fact_vacancy_interval_vic = (
     )
     .withColumn("full_other_days", F.coalesce(F.col("full_other_days"), F.lit(0)))
     .withColumn("void_record_count", F.coalesce(F.col("void_record_count"), F.lit(0)))
+    .withColumn("has_exception_flag", F.coalesce(F.col("has_exception_flag"), F.lit(0)))
+    .withColumn("exception_count", F.coalesce(F.col("exception_count"), F.lit(0)))
     .drop("full_vacancy_days_from_day_fact")
     .withColumn("meets_21_day_benchmark", F.col("full_vacancy_days") <= 21)
     .withColumn("meets_48_day_benchmark", F.col("full_vacancy_days") <= 48)
@@ -1079,6 +1208,7 @@ write_delta(audit_property_vic, "audit_property_vic")
 write_delta(audit_tenancy_vic, "audit_tenancy_vic")
 write_delta(audit_void_vic, "audit_void_vic")
 write_delta(audit_keys_vic, "audit_keys_vic")
+write_delta(tenancy_interval_exceptions, "audit_exceptions_vic")
 
 
 display(fact_vacancy_interval_vic.orderBy("property_id", "vacancy_start_date"))

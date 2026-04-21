@@ -679,6 +679,14 @@ tenancies_ordered = (
         "next_tenancy_id",
         F.lead("tenancy_id").over(tenancy_sequence_window),
     )
+    .withColumn(
+        "next_tenancy_current_stage",
+        F.lead("current_stage").over(tenancy_sequence_window),
+    )
+    .withColumn(
+        "next_tenancy_current_stage_code",
+        F.lead("current_stage_code").over(tenancy_sequence_window),
+    )
     .withColumn("tenancy_rank", F.row_number().over(tenancy_rank_window))
 )
 
@@ -689,6 +697,8 @@ first_tenancy = (
         F.col("tenancy_id").alias("first_tenancy_id"),
         F.col("tenancy_start_date").alias("first_tenancy_start_date"),
         F.col("tenancy_end_date").alias("first_tenancy_end_date"),
+        F.col("current_stage").alias("first_tenancy_current_stage"),
+        F.col("current_stage_code").alias("first_tenancy_current_stage_code"),
     )
 )
 
@@ -701,9 +711,13 @@ ended_tenancy_vacancies = (
         F.col("tenancy_id").alias("vacancy_start_tenancy_id"),
         F.col("tenancy_start_date").alias("vacancy_start_tenancy_start_date"),
         F.col("tenancy_end_date").alias("vacancy_start_tenancy_end_date"),
+        F.col("current_stage").alias("vacancy_start_tenancy_current_stage"),
+        F.col("current_stage_code").alias("vacancy_start_tenancy_current_stage_code"),
         F.col("next_tenancy_id").alias("vacancy_end_tenancy_id"),
         F.col("next_tenancy_start_date").alias("vacancy_end_tenancy_start_date"),
         F.col("next_tenancy_end_date").alias("vacancy_end_tenancy_end_date"),
+        F.col("next_tenancy_current_stage").alias("vacancy_end_tenancy_current_stage"),
+        F.col("next_tenancy_current_stage_code").alias("vacancy_end_tenancy_current_stage_code"),
         F.date_add(
             F.col("tenancy_end_date"),
             TENANCY_END_TO_VACANCY_START_OFFSET_DAYS,
@@ -742,9 +756,13 @@ initial_property_vacancies = (
         F.lit(None).cast("string").alias("vacancy_start_tenancy_id"),
         F.lit(None).cast("date").alias("vacancy_start_tenancy_start_date"),
         F.lit(None).cast("date").alias("vacancy_start_tenancy_end_date"),
+        F.lit(None).cast("string").alias("vacancy_start_tenancy_current_stage"),
+        F.lit(None).cast("string").alias("vacancy_start_tenancy_current_stage_code"),
         F.col("t.first_tenancy_id").alias("vacancy_end_tenancy_id"),
         F.col("t.first_tenancy_start_date").alias("vacancy_end_tenancy_start_date"),
         F.col("t.first_tenancy_end_date").alias("vacancy_end_tenancy_end_date"),
+        F.col("t.first_tenancy_current_stage").alias("vacancy_end_tenancy_current_stage"),
+        F.col("t.first_tenancy_current_stage_code").alias("vacancy_end_tenancy_current_stage_code"),
         F.date_add(
             F.col("p.property_start_date"),
             PROPERTY_START_TO_VACANCY_START_OFFSET_DAYS,
@@ -833,6 +851,8 @@ tenancy_interval_exceptions = (
         F.col("t.property_id").alias("property_id"),
         F.col("t.tenancy_id").alias("tenancy_id"),
         F.col("t.tenancy_reference").alias("tenancy_reference"),
+        F.col("t.current_stage").alias("tenancy_current_stage"),
+        F.col("t.current_stage_code").alias("tenancy_current_stage_code"),
         F.col("t.raw_tenancy_start_date").alias("raw_tenancy_start_date"),
         F.col("t.tenancy_start_date").alias("tenancy_start_date"),
         F.col("t.raw_tenancy_end_date").alias("raw_tenancy_end_date"),
@@ -924,6 +944,8 @@ tenancy_interval_exceptions = (
         "current_stage",
         "tenancy_id",
         "tenancy_reference",
+        "tenancy_current_stage",
+        "tenancy_current_stage_code",
         "raw_tenancy_start_date",
         "tenancy_start_date",
         "raw_tenancy_end_date",
@@ -1105,9 +1127,11 @@ vacancy_days = (
         "vacancy_start_tenancy_id",
         "vacancy_start_tenancy_start_date",
         "vacancy_start_tenancy_end_date",
+        "vacancy_start_tenancy_current_stage",
         "vacancy_end_tenancy_id",
         "vacancy_end_tenancy_start_date",
         "vacancy_end_tenancy_end_date",
+        "vacancy_end_tenancy_current_stage",
         "report_state",
     )
     .withColumn(
@@ -1191,9 +1215,11 @@ vacancy_day_fact = (
         "vacancy_start_tenancy_id",
         "vacancy_start_tenancy_start_date",
         "vacancy_start_tenancy_end_date",
+        "vacancy_start_tenancy_current_stage",
         "vacancy_end_tenancy_id",
         "vacancy_end_tenancy_start_date",
         "vacancy_end_tenancy_end_date",
+        "vacancy_end_tenancy_current_stage",
         "vacancy_date",
         "day_type",
         "vacancy_day_count",
@@ -1249,9 +1275,11 @@ fact_vacancy_interval_vic = (
         "vacancy_start_tenancy_id",
         "vacancy_start_tenancy_start_date",
         "vacancy_start_tenancy_end_date",
+        "vacancy_start_tenancy_current_stage",
         "vacancy_end_tenancy_id",
         "vacancy_end_tenancy_start_date",
         "vacancy_end_tenancy_end_date",
+        "vacancy_end_tenancy_current_stage",
         "report_state",
         "full_vacancy_days",
     )

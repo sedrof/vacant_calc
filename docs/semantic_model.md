@@ -274,9 +274,11 @@ From `fact_vacancy_interval_vic`:
 - `vacancy_start_tenancy_id`
 - `vacancy_start_tenancy_start_date`
 - `vacancy_start_tenancy_end_date`
+- `vacancy_start_tenancy_current_stage`
 - `vacancy_end_tenancy_id`
 - `vacancy_end_tenancy_start_date`
 - `vacancy_end_tenancy_end_date`
+- `vacancy_end_tenancy_current_stage`
 - `vacancy_start_date`
 - `vacancy_end_exclusive`
 - `void_id`
@@ -387,6 +389,7 @@ From `audit_exceptions_vic`, expose the fields needed for the exception page:
 - `audit_exceptions_vic[current_stage]`
 - `audit_exceptions_vic[tenancy_id]`
 - `audit_exceptions_vic[tenancy_reference]`
+- `audit_exceptions_vic[tenancy_current_stage]`
 - `audit_exceptions_vic[raw_tenancy_start_date]`
 - `audit_exceptions_vic[tenancy_start_date]`
 - `audit_exceptions_vic[raw_tenancy_end_date]`

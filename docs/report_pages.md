@@ -301,10 +301,12 @@ Field well:
 - `Columns` = `dim_property_vic[property_start_date]`
 - `Columns` = `dim_property_vic[property_end_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_id]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_current_stage]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_end_exclusive]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_id]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_current_stage]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[void_id]`
 - `Columns` = `fact_vacancy_interval_vic[void_reference]`
@@ -350,10 +352,12 @@ Formatting:
 - rename `fact_vacancy_interval_vic[property_has_exception_flag]` display label to `Property Has Exception`
 - rename `fact_vacancy_interval_vic[has_exception_flag]` display label to `Has Exception`
 - rename `fact_vacancy_interval_vic[vacancy_start_tenancy_id]` display label to `Previous Tenancy ID`
+- rename `fact_vacancy_interval_vic[vacancy_start_tenancy_current_stage]` display label to `Previous Tenancy Current Stage`
 - rename `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]` display label to `Previous Tenancy End Date`
 - rename `fact_vacancy_interval_vic[vacancy_start_date]` display label to `Vacancy Start Date`
 - rename `fact_vacancy_interval_vic[vacancy_end_exclusive]` display label to `Vacancy End Boundary`
 - rename `fact_vacancy_interval_vic[vacancy_end_tenancy_id]` display label to `Next Tenancy ID`
+- rename `fact_vacancy_interval_vic[vacancy_end_tenancy_current_stage]` display label to `Next Tenancy Current Stage`
 - rename `fact_vacancy_interval_vic[vacancy_end_tenancy_start_date]` display label to `Next Tenancy Start Date`
 - rename `dim_property_vic[property_start_date]` display label to `Property Start Date`
 - rename `dim_property_vic[property_end_date]` display label to `Property End Date`
@@ -408,10 +412,12 @@ Recommended final column order for management:
 - `Property Start Date`
 - `Property End Date`
 - `Previous Tenancy ID`
+- `Previous Tenancy Current Stage`
 - `Previous Tenancy End Date`
 - `Vacancy Start Date`
 - `Vacancy End Boundary`
 - `Next Tenancy ID`
+- `Next Tenancy Current Stage`
 - `Next Tenancy Start Date`
 - `Vacancy Days`
 - `Tenantable Days`
@@ -780,9 +786,11 @@ Field well:
 - `Columns` = `fact_vacancy_interval_vic[vacancy_origin]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_reason]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_id]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_current_stage]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_id]`
+- `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_current_stage]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_end_tenancy_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_end_exclusive]`
 - `Columns` = `fact_vacancy_interval_vic[void_id]`
@@ -804,9 +812,11 @@ Formatting:
 - rename `fact_vacancy_interval_vic[vacancy_origin]` display label to `Vacancy Origin`
 - rename `fact_vacancy_interval_vic[vacancy_reason]` display label to `Vacancy Reason`
 - rename `fact_vacancy_interval_vic[vacancy_start_tenancy_id]` display label to `Previous Tenancy ID`
+- rename `fact_vacancy_interval_vic[vacancy_start_tenancy_current_stage]` display label to `Previous Tenancy Current Stage`
 - rename `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]` display label to `Previous Tenancy End Date`
 - rename `fact_vacancy_interval_vic[vacancy_start_date]` display label to `Vacancy Start Date`
 - rename `fact_vacancy_interval_vic[vacancy_end_tenancy_id]` display label to `Next Tenancy ID`
+- rename `fact_vacancy_interval_vic[vacancy_end_tenancy_current_stage]` display label to `Next Tenancy Current Stage`
 - rename `fact_vacancy_interval_vic[vacancy_end_tenancy_start_date]` display label to `Next Tenancy Start Date`
 - rename `fact_vacancy_interval_vic[vacancy_end_exclusive]` display label to `Vacancy End Boundary`
 - rename `fact_vacancy_interval_vic[void_id]` display label to `Selected Void ID`
@@ -933,6 +943,7 @@ Field well:
 - `Columns` = `audit_exceptions_vic[current_stage]`
 - `Columns` = `audit_exceptions_vic[tenancy_id]`
 - `Columns` = `audit_exceptions_vic[tenancy_reference]`
+- `Columns` = `audit_exceptions_vic[tenancy_current_stage]`
 - `Columns` = `audit_exceptions_vic[raw_tenancy_start_date]`
 - `Columns` = `audit_exceptions_vic[tenancy_start_date]`
 - `Columns` = `audit_exceptions_vic[raw_tenancy_end_date]`
@@ -965,6 +976,7 @@ Formatting:
 - rename `audit_exceptions_vic[current_stage]` display label to `Property Current Stage`
 - rename `audit_exceptions_vic[tenancy_id]` display label to `Tenancy ID`
 - rename `audit_exceptions_vic[tenancy_reference]` display label to `Tenancy Reference`
+- rename `audit_exceptions_vic[tenancy_current_stage]` display label to `Tenancy Current Stage`
 - rename `audit_exceptions_vic[raw_tenancy_start_date]` display label to `Raw Tenancy Start Date`
 - rename `audit_exceptions_vic[tenancy_start_date]` display label to `Adjusted Tenancy Start Date`
 - rename `audit_exceptions_vic[raw_tenancy_end_date]` display label to `Raw Tenancy End Date`

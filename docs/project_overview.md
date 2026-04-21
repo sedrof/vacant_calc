@@ -36,13 +36,13 @@ The workbook establishes the most important date rules:
 5. `Tenantable Days` are vacancy days that are not in a void period.
 6. A property's vacancy period permanently ends if the property ends (e.g., decommissioned). The vacancy inclusive end date stops on the `property_end_date`.
 
-The workbook does not count the start boundary day in `Vac days`.
+The vacancy model now counts the start boundary day in `Vacancy Days`.
 
 Example:
 
 - vacancy start boundary = `2026-01-02`
 - report to date = `2026-03-31`
-- workbook `Vac days` = `2026-03-31 - 2026-01-02 = 88`
+- report `Vacancy Days` = `2026-03-31 - 2026-01-02 + 1 = 89`
 
 That is the behavior the notebook now follows.
 
@@ -172,7 +172,7 @@ These items still require business confirmation before expansion:
 
 The project is successful when:
 
-- the report reproduces the workbook boundary logic,
+- the report reproduces the confirmed vacancy boundary logic,
 - the date corrections are governed in Fabric,
 - the report is auditable at vacancy-day level,
 - the report supports exportable operational detail,

@@ -69,10 +69,10 @@ Important behavior:
 
 Important counting note:
 
-- the workbook logic excludes the vacancy start boundary day from `Vacancy Days`,
-- the notebook matches that behavior,
-- so selected-period vacancy days align with the workbook formula `MIN(end_date, report_to_date) - start_date`.
-- if the report is filtered to `2026-03-31`, a vacancy starting on `2026-01-02` contributes `88` days, not `89`.
+- `Vacancy Days` include the vacancy start boundary day,
+- the notebook counts from `vacancy_start_date` through `vacancy_end_exclusive - 1`,
+- so selected-period vacancy days align with `MIN(end_date, report_to_date) - start_date + 1`.
+- if the report is filtered to `2026-03-31`, a vacancy starting on `2026-01-02` contributes `89` days.
 
 ## Date Table
 
@@ -114,9 +114,9 @@ Worked example:
 
 - vacancy start boundary = `2026-01-02`
 - vacancy end boundary = `2026-01-10`
-- counted vacancy days = `2026-01-03` to `2026-01-09`
+- counted vacancy days = `2026-01-02` to `2026-01-09`
 - overlapping void period = `2026-01-05` to `2026-01-06`
-- counted void days = `2026-01-06`
+- counted void days = `2026-01-05` to `2026-01-06`
 
 Result:
 
@@ -234,6 +234,11 @@ Vacancy Has Exception =
 MAX ( fact_vacancy_interval_vic[has_exception_flag] )
 ```
 
+```DAX
+Property Has Any Exception =
+MAX ( fact_vacancy_interval_vic[property_has_exception_flag] )
+```
+
 Use `Vacancy Overlaps Selected Period` as the main row-visibility filter on detail visuals that should only show vacancies relevant to the selected date window.
 
 Use `Property Overlaps Selected Period` only where the business explicitly wants to filter by property lifecycle overlap with the selected date window.
@@ -285,6 +290,9 @@ From `fact_vacancy_interval_vic`:
 - `has_exception_flag`
 - `exception_count`
 - `exception_types`
+- `property_has_exception_flag`
+- `property_exception_count`
+- `property_exception_types`
 - `full_vacancy_days`
 - `full_tenantable_days`
 - `full_untenantable_days`

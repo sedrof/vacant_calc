@@ -801,7 +801,7 @@ vacancy_intervals = (
     .withColumn(
         "full_vacancy_days",
         F.greatest(
-            F.datediff(F.col("vacancy_end_exclusive"), F.col("vacancy_start_date")) - 1,
+            F.datediff(F.col("vacancy_end_exclusive"), F.col("vacancy_start_date")),
             F.lit(0),
         ),
     )
@@ -960,6 +960,15 @@ vacancy_exception_summary = (
     )
 )
 
+property_exception_summary = (
+    tenancy_interval_exceptions.groupBy("property_id")
+    .agg(
+        F.lit(1).alias("property_has_exception_flag"),
+        F.countDistinct("exception_id").alias("property_exception_count"),
+        F.concat_ws(", ", F.sort_array(F.collect_set("exception_type"))).alias("property_exception_types"),
+    )
+)
+
 
 vacancy_void_summary = (
     vacancy_intervals.alias("v")
@@ -1104,10 +1113,10 @@ vacancy_days = (
     .withColumn(
         "vacancy_date_array",
         F.when(
-            F.date_add(F.col("vacancy_start_date"), 1)
+            F.col("vacancy_start_date")
             <= F.date_sub(F.col("vacancy_end_exclusive"), 1),
             F.sequence(
-                F.date_add(F.col("vacancy_start_date"), 1),
+                F.col("vacancy_start_date"),
                 F.date_sub(F.col("vacancy_end_exclusive"), 1),
                 F.expr("interval 1 day"),
             )
@@ -1128,10 +1137,10 @@ void_days = (
         "property_condition",
         "key_register_engagement_id",
         F.when(
-            F.date_add(F.col("void_start_date"), 1)
+            F.col("void_start_date")
             <= F.date_sub(F.col("void_end_exclusive"), 1),
             F.sequence(
-                F.date_add(F.col("void_start_date"), 1),
+                F.col("void_start_date"),
                 F.date_sub(F.col("void_end_exclusive"), 1),
                 F.expr("interval 1 day"),
             )
@@ -1250,6 +1259,7 @@ fact_vacancy_interval_vic = (
     .join(vacancy_void_selected, "vacancy_id", "left")
     .join(vacancy_keys_selected, "vacancy_id", "left")
     .join(vacancy_exception_summary, "vacancy_id", "left")
+    .join(property_exception_summary, "property_id", "left")
     .join(vacancy_day_metrics, "vacancy_id", "left")
     .withColumn(
         "full_vacancy_days",
@@ -1268,6 +1278,8 @@ fact_vacancy_interval_vic = (
     .withColumn("void_record_count", F.coalesce(F.col("void_record_count"), F.lit(0)))
     .withColumn("has_exception_flag", F.coalesce(F.col("has_exception_flag"), F.lit(0)))
     .withColumn("exception_count", F.coalesce(F.col("exception_count"), F.lit(0)))
+    .withColumn("property_has_exception_flag", F.coalesce(F.col("property_has_exception_flag"), F.lit(0)))
+    .withColumn("property_exception_count", F.coalesce(F.col("property_exception_count"), F.lit(0)))
     .drop("full_vacancy_days_from_day_fact")
     .withColumn("meets_21_day_benchmark", F.col("full_vacancy_days") <= 21)
     .withColumn("meets_48_day_benchmark", F.col("full_vacancy_days") <= 48)

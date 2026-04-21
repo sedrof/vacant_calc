@@ -42,7 +42,7 @@ Before building anything, confirm these inputs:
 
 The date window is management-selected. Do not assume quarter-only reporting. The final report must work for any `From Date` and `To Date` chosen in the slicer.
 
-Do not start model or report work before confirming the workbook boundary logic.
+Do not start model or report work before confirming the vacancy boundary logic and the intended day-counting rule.
 
 ## Step 2: Create And Run The Notebook
 
@@ -124,7 +124,7 @@ Expected default behavior:
 
 - tenancy end `2026-01-01` becomes vacancy start `2026-01-02`
 - next tenancy start `2026-04-05` becomes vacancy inclusive end `2026-04-04`
-- workbook `Vac days` for a report ending `2026-03-31` becomes `88`, because the workbook formula is `MIN(vacancy_end, report_to_date) - vacancy_start`
+- selected `Vacancy Days` for a report ending `2026-03-31` becomes `89` for a vacancy starting `2026-01-02`, because the current model counts the vacancy start date and therefore uses `MIN(vacancy_end, report_to_date) - vacancy_start + 1`
 
 If the confirmed business rule is that the TechOne source dates are one day behind, set these raw source offset rules to `1` before rerunning the main notebook:
 
@@ -146,7 +146,7 @@ Before moving to the semantic model, validate the outputs with a small set of ex
 3. Confirm `Other Days = 0` in the current version.
 4. Confirm properties with no earlier tenancy can still produce an initial vacancy.
 5. Confirm open vacancies are capped by the property end date, or use the notebook snapshot boundary if still active.
-6. Confirm a workbook example such as `2026-01-02` to `2026-03-31` returns `88` vacancy days, not `89`.
+6. Confirm an example such as `2026-01-02` to `2026-03-31` returns `89` vacancy days under the current inclusive-start rule.
 7. Confirm the active rules displayed in `dim_active_vacancy_rule_parameters` match the intended maintenance change.
 8. Confirm the new `audit_*` tables show both raw and adjusted dates for the same test property.
 9. Confirm `audit_exceptions_vic` returns expected records for known bad source scenarios and stays empty for clean test properties.

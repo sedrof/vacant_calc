@@ -265,7 +265,7 @@ Formatting:
 
 Page note:
 
-- `Vacancy Days` follows workbook counting logic and excludes the vacancy start boundary day.
+- `Vacancy Days` include the vacancy start date itself.
 
 ## Page 2: Vacancy Detail
 
@@ -296,6 +296,7 @@ Field well:
 - `Columns` = `dim_property_vic[property_source]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_origin]`
 - `Columns` = `fact_vacancy_interval_vic[vacancy_reason]`
+- `Columns` = `fact_vacancy_interval_vic[property_has_exception_flag]`
 - `Columns` = `fact_vacancy_interval_vic[has_exception_flag]`
 - `Columns` = `dim_property_vic[property_start_date]`
 - `Columns` = `dim_property_vic[property_end_date]`
@@ -346,6 +347,7 @@ Formatting:
 - rename `dim_property_vic[property_source]` display label to `Property Source`
 - rename `fact_vacancy_interval_vic[vacancy_origin]` display label to `Vacancy Origin`
 - rename `fact_vacancy_interval_vic[vacancy_reason]` display label to `Vacancy Reason`
+- rename `fact_vacancy_interval_vic[property_has_exception_flag]` display label to `Property Has Exception`
 - rename `fact_vacancy_interval_vic[has_exception_flag]` display label to `Has Exception`
 - rename `fact_vacancy_interval_vic[vacancy_start_tenancy_id]` display label to `Previous Tenancy ID`
 - rename `fact_vacancy_interval_vic[vacancy_start_tenancy_end_date]` display label to `Previous Tenancy End Date`
@@ -381,6 +383,7 @@ Formatting:
 - rename `fact_vacancy_interval_vic[key_contractor_return_key_date]` display label to `Contractor Returned Key Date`
 - set column widths manually for export readability
 - apply conditional formatting icons to `Has Exception`
+- apply conditional formatting icons to `Property Has Exception`
 - icon rules:
 - if value is `1`, show red warning icon
 - if value is `0`, show no icon or green check based on team preference
@@ -400,6 +403,7 @@ Recommended final column order for management:
 - `Property Source`
 - `Vacancy Origin`
 - `Vacancy Reason`
+- `Property Has Exception`
 - `Has Exception`
 - `Property Start Date`
 - `Property End Date`

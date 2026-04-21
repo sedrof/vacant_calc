@@ -54,6 +54,6 @@ The report is designed to be:
 
 Current counting approach:
 
-- `Vacancy Days` follows workbook parity,
-- the vacancy start boundary day is excluded from the day count,
+- `Vacancy Days` now include the vacancy start date itself,
+- vacancy and void daily rows both count from their adjusted start dates,
 - report-period counts are driven by the date slicer over `fact_vacancy_day_vic`.

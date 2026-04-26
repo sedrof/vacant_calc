@@ -348,6 +348,8 @@ From the `audit_*` tables, expose the fields needed for the `Property Trace` pag
 - `audit_tenancy_vic[raw_tenancy_end_date]`
 - `audit_tenancy_vic[tenancy_end_date]`
 - `audit_tenancy_vic[tenancy_end_reason]`
+- `audit_tenancy_vic[current_stage]`
+- `audit_tenancy_vic[is_excluded_from_vacancy_logic]`
 - `audit_tenancy_vic[source_date_offset_days]`
 - `audit_void_vic[void_id]`
 - `audit_void_vic[void_reference]`

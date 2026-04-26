@@ -448,6 +448,18 @@ keys = (
     .filter(F.col("property_id").isNotNull())
 )
 
+cancelled_tenancy_condition = (
+    (F.upper(F.trim(F.coalesce(F.col("current_stage"), F.lit("")))) == F.lit("ALLOCATION CANCELLED"))
+    | (F.upper(F.trim(F.coalesce(F.col("current_stage_code"), F.lit("")))) == F.lit("AL_CAN"))
+)
+
+tenancies = tenancies.withColumn(
+    "is_excluded_from_vacancy_logic",
+    F.when(cancelled_tenancy_condition, F.lit(1)).otherwise(F.lit(0)),
+)
+
+tenancies_for_vacancy_logic = tenancies.filter(F.col("is_excluded_from_vacancy_logic") == 0)
+
 
 audit_property_vic = (
     properties.withColumn("report_state", F.lit(TARGET_STATE))
@@ -518,9 +530,12 @@ audit_tenancy_vic = (
         "tenancy_end_date",
         "tenancy_end_reason_code",
         "tenancy_end_reason",
+        "current_stage",
+        "current_stage_code",
         "active_code",
         "raw_inactive_date",
         "inactive_date",
+        "is_excluded_from_vacancy_logic",
         "source_date_offset_days",
         "report_state",
     )
@@ -667,7 +682,7 @@ tenancy_rank_window = Window.partitionBy("property_id").orderBy(
 )
 
 tenancies_ordered = (
-    tenancies.withColumn(
+    tenancies_for_vacancy_logic.withColumn(
         "next_tenancy_start_date",
         F.lead("tenancy_start_date").over(tenancy_sequence_window),
     )
@@ -841,7 +856,7 @@ void_intervals = (
 
 
 tenancy_interval_exceptions = (
-    tenancies.alias("t")
+    tenancies_for_vacancy_logic.alias("t")
     .join(
         void_intervals.alias("d"),
         F.col("t.property_id") == F.col("d.property_id"),

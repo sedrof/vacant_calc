@@ -16,6 +16,8 @@ This folder contains the working delivery documentation for the VIC vacancy repo
    Source table map and the columns currently used by the notebook.
 6. `../vacancy_rule_parameter_maintenance_notebook.py`
    Notebook-style script for reviewing and changing governed date-correction parameters.
+7. `audit_page_property_navigation.md`
+   How to open the Audit page from the Vacancy Detail table using property-level drillthrough.
 
 Additional implementation outputs:
 

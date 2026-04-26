@@ -660,6 +660,7 @@ Field well:
 - `Columns` = `audit_tenancy_vic[tenancy_end_reason]`
 - `Columns` = `audit_tenancy_vic[current_stage]`
 - `Columns` = `audit_tenancy_vic[active_code]`
+- `Columns` = `audit_tenancy_vic[is_excluded_from_vacancy_logic]`
 - `Columns` = `audit_tenancy_vic[source_date_offset_days]`
 
 Formatting:
@@ -678,7 +679,12 @@ Formatting:
 - rename `audit_tenancy_vic[tenancy_end_reason]` display label to `End Of Tenancy Reason`
 - rename `audit_tenancy_vic[current_stage]` display label to `Tenancy Stage`
 - rename `audit_tenancy_vic[active_code]` display label to `Tenancy Active Code`
+- rename `audit_tenancy_vic[is_excluded_from_vacancy_logic]` display label to `Excluded From Vacancy Logic`
 - rename `audit_tenancy_vic[source_date_offset_days]` display label to `Tenancy Source Offset Days`
+
+Note:
+
+- `Allocation Cancelled` tenancy rows stay visible in this audit table, but they are excluded from vacancy construction and exception generation.
 
 ### Visual 4: Void trace table
 

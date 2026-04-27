@@ -65,7 +65,8 @@ Important behavior:
 - `From Date` removes vacancy day rows before the chosen start date,
 - `To Date` removes vacancy day rows after the chosen end date,
 - descriptive columns such as `property_start_date`, `property_end_date`, `vacancy_start_date`, and `void_start_date` can still display values outside the slicer if the vacancy overlaps the selected window.
-- `vacancy_end_exclusive` is a technical boundary. If you need a user-facing inclusive end inside a measure, convert it with `vacancy_end_exclusive - 1`.
+- `vacancy_end_date` is the business-facing inclusive vacancy end date.
+- `vacancy_end_exclusive` is the technical boundary used by the notebook for interval math.
 
 Important counting note:
 
@@ -280,6 +281,7 @@ From `fact_vacancy_interval_vic`:
 - `vacancy_end_tenancy_end_date`
 - `vacancy_end_tenancy_current_stage`
 - `vacancy_start_date`
+- `vacancy_end_date`
 - `vacancy_end_exclusive`
 - `void_id`
 - `void_reference`
@@ -413,7 +415,8 @@ Hide technical columns such as codes, join keys that users do not need, and inte
 
 - Use measures from `fact_vacancy_day_vic` on any page that must respect the selected date range.
 - Treat the `full_*` columns in `fact_vacancy_interval_vic` as lifetime interval totals, not selected-period totals.
-- Label `vacancy_end_exclusive` clearly in the report so users do not mistake it for a plain inclusive end date.
+- Use `vacancy_end_date` in business-facing report tables.
+- Keep `vacancy_end_exclusive` hidden from normal report users unless you are doing technical validation.
 - Keep `dim_active_vacancy_rule_parameters` disconnected and visible for governance only.
 - If you already created `dim_property_vic[property_id]` -> `fact_vacancy_day_vic[property_id]`, delete or deactivate it before creating the `vacancy_id` relationship.
 - `void_*` fields in `fact_vacancy_interval_vic` represent one selected overlapping void row per vacancy. Use `overlap_void_record_count` if you later expose it and need to identify multiple overlaps.

@@ -145,6 +145,7 @@ These decisions are intentional and should not be changed without evidence:
 - The vacancy interval output includes overlapping void start/end values and a representative keys row per vacancy.
 - The vacancy interval output also includes tenancy context for the tenancy that ended into the vacancy and the next tenancy that closed it, using `Property.PROPERTYID = Tenancy.PROPID`.
 - Property-facing outputs now also carry `Property Type`, `Property Program`, and `Property Current Stage` so the detail, trace, and exception pages can show consistent property context.
+- `Vacancy ID` is formatted as `property_id_dd/MM/yy`.
 - The solution also publishes an exception table for known invalid source patterns such as tenancy intervals overlapping void intervals for the same property.
 - Tenancy rows with current stage `Allocation Cancelled` are kept in the tenancy audit output for traceability, but are excluded from vacancy construction and exception generation.
 - `Other Days` remains `0` because no valid source rule has been confirmed.

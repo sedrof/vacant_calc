@@ -811,24 +811,14 @@ initial_property_vacancies = (
 
 vacancy_intervals_base = ended_tenancy_vacancies.unionByName(initial_property_vacancies)
 
-vacancy_id_window = Window.orderBy(
-    F.col("property_id"),
-    F.col("vacancy_start_date"),
-    F.col("vacancy_origin"),
-    F.col("vacancy_start_tenancy_id").asc_nulls_last(),
-)
-
 vacancy_intervals = (
     vacancy_intervals_base.join(dim_property_vic, "property_id", "inner")
-    .withColumn("vacancy_sequence", F.row_number().over(vacancy_id_window))
     .withColumn(
         "vacancy_id",
         F.concat_ws(
-            "-",
-            F.lit("VIC"),
+            "_",
             F.col("property_id").cast("string"),
-            F.date_format("vacancy_start_date", "yyyyMMdd"),
-            F.lpad(F.col("vacancy_sequence").cast("string"), 4, "0"),
+            F.date_format("vacancy_start_date", "dd/MM/yy"),
         ),
     )
     .withColumn(
@@ -838,6 +828,7 @@ vacancy_intervals = (
             F.lit(0),
         ),
     )
+    .withColumn("vacancy_end_date", F.date_sub(F.col("vacancy_end_exclusive"), 1))
     .withColumn("is_open_vacancy", F.col("vacancy_end_tenancy_id").isNull())
     .withColumn("report_state", F.lit(TARGET_STATE))
 )
@@ -1138,6 +1129,7 @@ vacancy_days = (
         "vacancy_reason_code",
         "vacancy_reason",
         "vacancy_start_date",
+        "vacancy_end_date",
         "vacancy_end_exclusive",
         "vacancy_start_tenancy_id",
         "vacancy_start_tenancy_start_date",
@@ -1226,6 +1218,7 @@ vacancy_day_fact = (
         "vacancy_reason_code",
         "vacancy_reason",
         "vacancy_start_date",
+        "vacancy_end_date",
         "vacancy_end_exclusive",
         "vacancy_start_tenancy_id",
         "vacancy_start_tenancy_start_date",
@@ -1286,6 +1279,7 @@ fact_vacancy_interval_vic = (
         "vacancy_reason_code",
         "vacancy_reason",
         "vacancy_start_date",
+        "vacancy_end_date",
         "vacancy_end_exclusive",
         "vacancy_start_tenancy_id",
         "vacancy_start_tenancy_start_date",

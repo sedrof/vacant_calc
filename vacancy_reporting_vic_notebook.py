@@ -830,6 +830,10 @@ vacancy_intervals = (
     )
     .withColumn("vacancy_end_date", F.date_sub(F.col("vacancy_end_exclusive"), 1))
     .withColumn("is_open_vacancy", F.col("vacancy_end_tenancy_id").isNull())
+    .withColumn(
+        "vacancy_end_date_display",
+        F.when(F.col("is_open_vacancy"), F.lit(None).cast("date")).otherwise(F.col("vacancy_end_date")),
+    )
     .withColumn("report_state", F.lit(TARGET_STATE))
 )
 
@@ -1130,6 +1134,7 @@ vacancy_days = (
         "vacancy_reason",
         "vacancy_start_date",
         "vacancy_end_date",
+        "vacancy_end_date_display",
         "vacancy_end_exclusive",
         "vacancy_start_tenancy_id",
         "vacancy_start_tenancy_start_date",
@@ -1219,6 +1224,7 @@ vacancy_day_fact = (
         "vacancy_reason",
         "vacancy_start_date",
         "vacancy_end_date",
+        "vacancy_end_date_display",
         "vacancy_end_exclusive",
         "vacancy_start_tenancy_id",
         "vacancy_start_tenancy_start_date",
@@ -1280,6 +1286,7 @@ fact_vacancy_interval_vic = (
         "vacancy_reason",
         "vacancy_start_date",
         "vacancy_end_date",
+        "vacancy_end_date_display",
         "vacancy_end_exclusive",
         "vacancy_start_tenancy_id",
         "vacancy_start_tenancy_start_date",
@@ -1289,6 +1296,7 @@ fact_vacancy_interval_vic = (
         "vacancy_end_tenancy_start_date",
         "vacancy_end_tenancy_end_date",
         "vacancy_end_tenancy_current_stage",
+        "is_open_vacancy",
         "report_state",
         "full_vacancy_days",
     )

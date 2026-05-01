@@ -122,14 +122,14 @@ Worked example:
 
 Result:
 
-- `Vacancy Days` = `7`
-- `Untenantable Days` = `1`
+- `Vacancy Days` = `8`
+- `Untenantable Days` = `2`
 - `Tenantable Days` = `6`
 
 This follows the implemented rule:
 
-- vacancy day rows are created from `vacancy_start_date + 1` through `vacancy_end_exclusive - 1`
-- void day rows are created the same way
+- vacancy day rows are created from `vacancy_start_date` through `vacancy_end_exclusive - 1`
+- `Void End Date` is treated as inclusive, so void day rows are created from `void_start_date` through `void_end_date`
 - a counted vacancy day is `Tenantable` only when it does not overlap a counted void day
 
 ```DAX

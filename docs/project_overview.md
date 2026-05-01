@@ -33,8 +33,9 @@ The workbook establishes the most important date rules:
 2. If the next tenancy starts on `2026-04-05`, the vacancy inclusive end date is `2026-04-04`.
 3. A new property vacancy starts from the property start date, not from a tenancy end.
 4. Void periods are a subset of the vacancy period.
-5. `Tenantable Days` are vacancy days that are not in a void period.
-6. A property's vacancy period permanently ends if the property ends (e.g., decommissioned). The vacancy inclusive end date stops on the `property_end_date`.
+5. `Void End Date` is a business-facing inclusive date. For counting, the notebook stores `void_end_exclusive = void_end_date + 1`.
+6. `Tenantable Days` are vacancy days that are not in a void period.
+7. A property's vacancy period permanently ends if the property ends (e.g., decommissioned). The vacancy inclusive end date stops on the `property_end_date`.
 
 The vacancy model now counts the start boundary day in `Vacancy Days`.
 

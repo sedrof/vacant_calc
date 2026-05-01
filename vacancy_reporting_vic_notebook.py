@@ -842,7 +842,7 @@ void_intervals = (
     voids.join(dim_property_vic.select("property_id"), "property_id", "inner")
     .withColumn(
         "void_end_exclusive",
-        F.coalesce(F.col("void_end_date"), snapshot_end_exclusive),
+        F.coalesce(F.date_add(F.col("void_end_date"), 1), snapshot_end_exclusive),
     )
     .filter(F.col("void_start_date").isNotNull())
     .filter(F.col("void_start_date") < F.col("void_end_exclusive"))

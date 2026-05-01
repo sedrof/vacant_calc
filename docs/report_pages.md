@@ -517,7 +517,11 @@ Field well:
 
 Formatting:
 
-- rename `void_end_exclusive` display label to `Void End Boundary`
+- rename `void_end_exclusive` display label to `Void End Exclusive Boundary`
+
+Note:
+
+- `void_end_date` is the inclusive business date. `void_end_exclusive` is the technical boundary used for day counting.
 
 ### Visual 3: Keys audit table
 

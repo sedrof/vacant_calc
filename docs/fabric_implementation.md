@@ -143,7 +143,7 @@ Before moving to the semantic model, validate the outputs with a small set of ex
 
 1. Confirm there is one row per vacancy day in `fact_vacancy_day_vic`.
 2. Confirm `Tenantable Days + Untenantable Days + Other Days = Vacancy Days`.
-3. Confirm `Other Days = 0` in the current version.
+3. Confirm `Other Days = 0` in the current version, with `other_start_date` and `other_end_date` blank until the source rule is confirmed.
 4. Confirm `Void End Date` is counted inclusively by checking that `void_end_exclusive = void_end_date + 1` when `void_end_date` is populated.
 5. Confirm properties with no earlier tenancy can still produce an initial vacancy.
 6. Confirm open vacancies are capped by the property end date, or use the notebook snapshot boundary if still active.
@@ -219,7 +219,7 @@ Do not change offsets in the report itself for the official reporting process.
 - `Keys.PARENT_ENGAGEMENT_ID` is treated as `property_id`.
 - one representative keys row is selected per vacancy based on property match and date proximity.
 - `Resident_Data` is not required for the current vacancy logic.
-- `Other Days` remains `0` until a real rule is approved.
+- `Other Days` remains `0` until a real rule is approved. The interval table already includes placeholder fields `other_start_date`, `other_end_date`, and `other_days` for the future void-table mapping.
 
 ## Extension Guidance
 

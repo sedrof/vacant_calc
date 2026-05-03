@@ -321,6 +321,9 @@ Field well:
 - `Columns` = `[Tenantable Days]`
 - `Columns` = `[Untenantable Days]`
 - `Columns` = `[Other Days]`
+- `Columns` = `fact_vacancy_interval_vic[other_start_date]`
+- `Columns` = `fact_vacancy_interval_vic[other_end_date]`
+- `Columns` = `fact_vacancy_interval_vic[other_days]`
 - `Columns` = `fact_vacancy_interval_vic[key_id]`
 - `Columns` = `fact_vacancy_interval_vic[key_reference]`
 - `Columns` = `fact_vacancy_interval_vic[key_vacancy_exemptions_code]`
@@ -374,6 +377,9 @@ Formatting:
 - rename `[Tenantable Days]` display label to `Tenantable Days`
 - rename `[Untenantable Days]` display label to `Untenantable Days`
 - rename `[Other Days]` display label to `Other Days`
+- rename `fact_vacancy_interval_vic[other_start_date]` display label to `Other Start Date`
+- rename `fact_vacancy_interval_vic[other_end_date]` display label to `Other End Date`
+- rename `fact_vacancy_interval_vic[other_days]` display label to `Other Days Source`
 - rename `fact_vacancy_interval_vic[key_id]` display label to `Keys Record ID`
 - rename `fact_vacancy_interval_vic[key_reference]` display label to `Keys Reference`
 - rename `fact_vacancy_interval_vic[key_vacancy_exemptions_code]` display label to `Vacancy Exemption Code`
@@ -423,6 +429,9 @@ Recommended final column order for management:
 - `Tenantable Days`
 - `Untenantable Days`
 - `Other Days`
+- `Other Start Date`
+- `Other End Date`
+- `Other Days Source`
 - `Void ID`
 - `Void Reference`
 - `Selected Void Start Date`
@@ -454,6 +463,7 @@ Clarification:
 - `vacancy_end_tenancy_*` columns describe the next tenancy that closes the vacancy.
 - `void_*` columns are the first selected overlapping void row for the vacancy.
 - `overlap_void_*` columns show the overall overlap range across all matching void rows for that vacancy.
+- `other_start_date`, `other_end_date`, and `other_days` are placeholders. They stay blank or `0` until the source rule for `Other Days` is confirmed.
 
 Behavior:
 

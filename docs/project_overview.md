@@ -149,7 +149,7 @@ These decisions are intentional and should not be changed without evidence:
 - `Vacancy ID` is formatted as `property_id_dd/MM/yy`.
 - The solution also publishes an exception table for known invalid source patterns such as tenancy intervals overlapping void intervals for the same property.
 - Tenancy rows with current stage `Allocation Cancelled` are kept in the tenancy audit output for traceability, but are excluded from vacancy construction and exception generation.
-- `Other Days` remains `0` because no valid source rule has been confirmed.
+- `Other Days` remains `0` because no valid source rule has been confirmed. Placeholder interval fields `other_start_date`, `other_end_date`, and `other_days` are published for the future void-table mapping.
 - `Property Program` is currently used as `Property Source`.
 
 ## Delivery Sequence
@@ -167,7 +167,7 @@ Use this order for implementation:
 
 These items still require business confirmation before expansion:
 
-- The exact rule for `Other Days`
+- The exact void-table rule and source fields for `Other Days`
 - Whether any source tables need a permanent raw date shift
 - Whether `Property Program` is definitively the right field for `Property Source`
 

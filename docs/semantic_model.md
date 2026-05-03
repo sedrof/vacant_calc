@@ -303,6 +303,9 @@ From `fact_vacancy_interval_vic`:
 - `full_tenantable_days`
 - `full_untenantable_days`
 - `full_other_days`
+- `other_start_date`
+- `other_end_date`
+- `other_days`
 - `key_id`
 - `key_reference`
 - `key_date_received_from_tenant`
@@ -417,6 +420,7 @@ Hide technical columns such as codes, join keys that users do not need, and inte
 
 - Use measures from `fact_vacancy_day_vic` on any page that must respect the selected date range.
 - Treat the `full_*` columns in `fact_vacancy_interval_vic` as lifetime interval totals, not selected-period totals.
+- `other_start_date`, `other_end_date`, and `other_days` are placeholders for the future void-table-based `Other Days` rule. They are currently blank or `0`.
 - Use `vacancy_end_date_display` in business-facing report tables.
 - Use `vacancy_end_date` only when you need the inclusive calculated end date regardless of whether the vacancy is still open.
 - Keep `vacancy_end_exclusive` hidden from normal report users unless you are doing technical validation.

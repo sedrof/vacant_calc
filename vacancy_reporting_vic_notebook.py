@@ -1320,6 +1320,9 @@ fact_vacancy_interval_vic = (
         F.coalesce(F.col("full_untenantable_days"), F.lit(0)),
     )
     .withColumn("full_other_days", F.coalesce(F.col("full_other_days"), F.lit(0)))
+    .withColumn("other_start_date", F.lit(None).cast("date"))
+    .withColumn("other_end_date", F.lit(None).cast("date"))
+    .withColumn("other_days", F.lit(0))
     .withColumn("void_record_count", F.coalesce(F.col("void_record_count"), F.lit(0)))
     .withColumn("has_exception_flag", F.coalesce(F.col("has_exception_flag"), F.lit(0)))
     .withColumn("exception_count", F.coalesce(F.col("exception_count"), F.lit(0)))

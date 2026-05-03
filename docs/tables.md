@@ -447,6 +447,12 @@ Columns currently used by the notebook:
 - `DataSet.PROPERTY_CONDITION`
 - `DataSet.PROPERTY_CONDITION_D`
 - `DataSet.KEY_REGISTER_ENG_ID`
+(DataSet.OTHER_VACANCY_TYPE_REASON],
+[DataSet.OTHER_VACANCY_FROM_DATE],
+(DataSet.OTHER_VACANCY_TO_DATE],
+(DataSet. OTHER_VAC_FROM DATE_TXT],
+(DataSet.OTHER_VAC_TO_DATE_TXT),
+ [DataSet.VOID_TYPE],
 ### 4. `Keys`
 
 Purpose:

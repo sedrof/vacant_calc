@@ -119,6 +119,18 @@ def shift_date_columns(df, columns: list[str], offset_days: int):
     return df
 
 
+def parsed_text_date(column_name: str):
+    cleaned = F.trim(F.col(column_name))
+    return F.coalesce(
+        F.to_date(cleaned),
+        F.to_date(cleaned, "yyyy-MM-dd"),
+        F.to_date(cleaned, "dd/MM/yyyy"),
+        F.to_date(cleaned, "d/M/yyyy"),
+        F.to_date(cleaned, "dd-MM-yyyy"),
+        F.to_date(cleaned, "d-M-yyyy"),
+    )
+
+
 def write_delta(df, table_name: str):
     (
         df.write.mode("overwrite")
@@ -255,6 +267,12 @@ void_columns = [
     ("DataSet.PROPERTY_CONDITION", "property_condition_code"),
     ("DataSet.PROPERTY_CONDITION_D", "property_condition"),
     ("DataSet.KEY_REGISTER_ENG_ID", "key_register_engagement_id"),
+    ("DataSet.OTHER_VACANCY_TYPE_REASON", "other_vacancy_type_reason"),
+    ("DataSet.OTHER_VACANCY_FROM_DATE", "other_start_date"),
+    ("DataSet.OTHER_VACANCY_TO_DATE", "other_end_date"),
+    ("DataSet.OTHER_VAC_FROM_DATE_TXT", "other_start_date_text"),
+    ("DataSet.OTHER_VAC_TO_DATE_TXT", "other_end_date_text"),
+    ("DataSet.VOID_TYPE", "void_type"),
 ]
 
 keys_columns = [
@@ -365,14 +383,71 @@ tenancies = (
 
 voids = (
     load_table("Void", void_columns)
-    .transform(lambda df: with_date(df, ["void_start_date", "void_end_date"]))
-    .transform(lambda df: with_raw_column_copies(df, ["void_start_date", "void_end_date"]))
+    .transform(
+        lambda df: with_date(
+            df,
+            [
+                "void_start_date",
+                "void_end_date",
+                "other_start_date",
+                "other_end_date",
+            ],
+        )
+    )
+    .transform(
+        lambda df: with_raw_column_copies(
+            df,
+            [
+                "void_start_date",
+                "void_end_date",
+                "other_start_date",
+                "other_end_date",
+            ],
+        )
+    )
     .transform(
         lambda df: shift_date_columns(
             df,
-            ["void_start_date", "void_end_date"],
+            [
+                "void_start_date",
+                "void_end_date",
+            ],
             VOID_SOURCE_DATE_OFFSET_DAYS,
         )
+    )
+    .withColumn("parsed_other_start_date_text", parsed_text_date("other_start_date_text"))
+    .withColumn("parsed_other_end_date_text", parsed_text_date("other_end_date_text"))
+    .withColumn(
+        "adjusted_other_start_date_from_field",
+        F.when(
+            F.col("other_start_date").isNotNull(),
+            F.date_add(F.col("other_start_date"), VOID_SOURCE_DATE_OFFSET_DAYS),
+        ),
+    )
+    .withColumn(
+        "adjusted_other_end_date_from_field",
+        F.when(
+            F.col("other_end_date").isNotNull(),
+            F.date_add(F.col("other_end_date"), VOID_SOURCE_DATE_OFFSET_DAYS),
+        ),
+    )
+    .withColumn(
+        "other_start_date_source",
+        F.when(F.col("parsed_other_start_date_text").isNotNull(), F.lit("OTHER_VAC_FROM_DATE_TXT"))
+        .when(F.col("adjusted_other_start_date_from_field").isNotNull(), F.lit("OTHER_VACANCY_FROM_DATE")),
+    )
+    .withColumn(
+        "other_end_date_source",
+        F.when(F.col("parsed_other_end_date_text").isNotNull(), F.lit("OTHER_VAC_TO_DATE_TXT"))
+        .when(F.col("adjusted_other_end_date_from_field").isNotNull(), F.lit("OTHER_VACANCY_TO_DATE")),
+    )
+    .withColumn(
+        "other_start_date",
+        F.coalesce(F.col("parsed_other_start_date_text"), F.col("adjusted_other_start_date_from_field")),
+    )
+    .withColumn(
+        "other_end_date",
+        F.coalesce(F.col("parsed_other_end_date_text"), F.col("adjusted_other_end_date_from_field")),
     )
     .withColumn("void_id", F.col("void_id").cast("string"))
     .withColumn("property_id", F.col("property_id").cast("string"))
@@ -558,6 +633,44 @@ audit_void_vic = (
     )
     .withColumn("report_state", F.lit(TARGET_STATE))
     .withColumn("source_date_offset_days", F.lit(VOID_SOURCE_DATE_OFFSET_DAYS))
+    .withColumn(
+        "void_end_exclusive",
+        F.coalesce(F.date_add(F.col("void_end_date"), 1), snapshot_end_exclusive),
+    )
+    .withColumn(
+        "other_end_exclusive",
+        F.when(F.col("other_end_date").isNotNull(), F.date_add(F.col("other_end_date"), 1)),
+    )
+    .withColumn(
+        "has_other_vacancy_range",
+        F.col("other_start_date").isNotNull() & F.col("other_end_exclusive").isNotNull(),
+    )
+    .withColumn(
+        "other_vacancy_outside_void_flag",
+        F.when(
+            F.col("has_other_vacancy_range")
+            & (
+                (F.col("other_start_date") < F.col("void_start_date"))
+                | (F.col("other_end_exclusive") > F.col("void_end_exclusive"))
+            ),
+            F.lit(1),
+        ).otherwise(F.lit(0)),
+    )
+    .withColumn(
+        "other_effective_start_date",
+        F.when(
+            F.col("has_other_vacancy_range"),
+            F.greatest(F.col("other_start_date"), F.col("void_start_date")),
+        ),
+    )
+    .withColumn(
+        "other_effective_end_exclusive",
+        F.when(
+            F.col("has_other_vacancy_range"),
+            F.least(F.col("other_end_exclusive"), F.col("void_end_exclusive")),
+        ),
+    )
+    .withColumn("other_effective_end_date", F.date_sub(F.col("other_effective_end_exclusive"), 1))
     .select(
         "property_id",
         "property_type_code",
@@ -572,11 +685,28 @@ audit_void_vic = (
         "void_start_date",
         "raw_void_end_date",
         "void_end_date",
+        "void_end_exclusive",
         "void_reason_code",
         "void_reason",
         "property_condition_code",
         "property_condition",
         "key_register_engagement_id",
+        "other_vacancy_type_reason",
+        "raw_other_start_date",
+        "other_start_date",
+        "raw_other_end_date",
+        "other_end_date",
+        "other_end_exclusive",
+        "has_other_vacancy_range",
+        "other_start_date_source",
+        "other_end_date_source",
+        "other_effective_start_date",
+        "other_effective_end_date",
+        "other_effective_end_exclusive",
+        "other_vacancy_outside_void_flag",
+        "other_start_date_text",
+        "other_end_date_text",
+        "void_type",
         "source_date_offset_days",
         "report_state",
     )
@@ -844,6 +974,40 @@ void_intervals = (
         "void_end_exclusive",
         F.coalesce(F.date_add(F.col("void_end_date"), 1), snapshot_end_exclusive),
     )
+    .withColumn(
+        "other_end_exclusive",
+        F.when(F.col("other_end_date").isNotNull(), F.date_add(F.col("other_end_date"), 1)),
+    )
+    .withColumn(
+        "has_other_vacancy_range",
+        F.col("other_start_date").isNotNull() & F.col("other_end_exclusive").isNotNull(),
+    )
+    .withColumn(
+        "other_vacancy_outside_void_flag",
+        F.when(
+            F.col("has_other_vacancy_range")
+            & (
+                (F.col("other_start_date") < F.col("void_start_date"))
+                | (F.col("other_end_exclusive") > F.col("void_end_exclusive"))
+            ),
+            F.lit(1),
+        ).otherwise(F.lit(0)),
+    )
+    .withColumn(
+        "other_effective_start_date",
+        F.when(
+            F.col("has_other_vacancy_range"),
+            F.greatest(F.col("other_start_date"), F.col("void_start_date")),
+        ),
+    )
+    .withColumn(
+        "other_effective_end_exclusive",
+        F.when(
+            F.col("has_other_vacancy_range"),
+            F.least(F.col("other_end_exclusive"), F.col("void_end_exclusive")),
+        ),
+    )
+    .withColumn("other_effective_end_date", F.date_sub(F.col("other_effective_end_exclusive"), 1))
     .filter(F.col("void_start_date").isNotNull())
     .filter(F.col("void_start_date") < F.col("void_end_exclusive"))
     .withColumn("report_state", F.lit(TARGET_STATE))
@@ -975,10 +1139,96 @@ tenancy_interval_exceptions = (
 )
 
 
+other_vacancy_exceptions = (
+    void_intervals.filter(F.col("other_vacancy_outside_void_flag") == 1)
+    .join(
+        properties.select(
+            "property_id",
+            "property_number",
+            "property_short_address",
+            "entity",
+            "ownership",
+            "housing_program",
+            "property_type",
+            "property_program",
+            "current_stage",
+        ),
+        "property_id",
+        "left",
+    )
+    .withColumn("exception_type", F.lit("OTHER_VACANCY_OUTSIDE_VOID"))
+    .withColumn("exception_severity", F.lit("Error"))
+    .withColumn(
+        "exception_summary",
+        F.concat_ws(
+            " ",
+            F.lit("Other vacancy range"),
+            F.date_format(F.col("other_start_date"), "yyyy-MM-dd"),
+            F.lit("to"),
+            F.date_format(F.col("other_end_date"), "yyyy-MM-dd"),
+            F.lit("sits outside void"),
+            F.col("void_id"),
+            F.lit("range"),
+            F.date_format(F.col("void_start_date"), "yyyy-MM-dd"),
+            F.lit("to"),
+            F.date_format(F.col("void_end_date"), "yyyy-MM-dd"),
+            F.lit("."),
+        ),
+    )
+    .withColumn(
+        "exception_id",
+        F.concat_ws(
+            "-",
+            F.lit("EXC"),
+            F.col("property_id"),
+            F.col("void_id"),
+            F.lit("OTHER"),
+            F.date_format(F.col("other_start_date"), "yyyyMMdd"),
+        ),
+    )
+    .select(
+        "exception_id",
+        "exception_type",
+        "exception_severity",
+        "property_id",
+        "property_number",
+        "property_short_address",
+        "entity",
+        "ownership",
+        "housing_program",
+        "property_type",
+        "property_program",
+        "current_stage",
+        F.lit(None).cast("string").alias("tenancy_id"),
+        F.lit(None).cast("string").alias("tenancy_reference"),
+        F.lit(None).cast("string").alias("tenancy_current_stage"),
+        F.lit(None).cast("string").alias("tenancy_current_stage_code"),
+        F.lit(None).cast("date").alias("raw_tenancy_start_date"),
+        F.lit(None).cast("date").alias("tenancy_start_date"),
+        F.lit(None).cast("date").alias("raw_tenancy_end_date"),
+        F.lit(None).cast("date").alias("tenancy_end_date"),
+        "void_id",
+        "void_reference",
+        "raw_void_start_date",
+        "void_start_date",
+        "raw_void_end_date",
+        "void_end_date",
+        F.col("other_start_date").alias("overlap_start_date"),
+        F.col("other_end_date").alias("overlap_end_date"),
+        F.datediff(F.col("other_end_exclusive"), F.col("other_start_date")).alias("overlap_days"),
+        "exception_summary",
+        F.lit(TARGET_STATE).alias("report_state"),
+    )
+)
+
+
+audit_exceptions_vic = tenancy_interval_exceptions.unionByName(other_vacancy_exceptions)
+
+
 vacancy_exception_summary = (
     vacancy_intervals.alias("v")
     .join(
-        tenancy_interval_exceptions.alias("e"),
+        audit_exceptions_vic.alias("e"),
         (F.col("v.property_id") == F.col("e.property_id"))
         & (F.col("e.overlap_start_date") < F.col("v.vacancy_end_exclusive"))
         & (F.date_add(F.col("e.overlap_end_date"), 1) > F.col("v.vacancy_start_date")),
@@ -993,7 +1243,7 @@ vacancy_exception_summary = (
 )
 
 property_exception_summary = (
-    tenancy_interval_exceptions.groupBy("property_id")
+    audit_exceptions_vic.groupBy("property_id")
     .agg(
         F.lit(1).alias("property_has_exception_flag"),
         F.countDistinct("exception_id").alias("property_exception_count"),
@@ -1049,6 +1299,27 @@ vacancy_void_selected = (
         F.col("d.void_reason").alias("void_reason"),
         F.col("d.property_condition_code").alias("void_property_condition_code"),
         F.col("d.property_condition").alias("void_property_condition"),
+    )
+)
+
+
+vacancy_other_summary = (
+    vacancy_intervals.alias("v")
+    .join(
+        void_intervals.alias("d"),
+        (F.col("v.property_id") == F.col("d.property_id"))
+        & (F.col("d.other_effective_start_date") < F.col("d.other_effective_end_exclusive"))
+        & (F.col("d.other_effective_start_date") < F.col("v.vacancy_end_exclusive"))
+        & (F.col("d.other_effective_end_exclusive") > F.col("v.vacancy_start_date")),
+        "left",
+    )
+    .groupBy("v.vacancy_id")
+    .agg(
+        F.min("d.other_effective_start_date").alias("other_start_date"),
+        F.max("d.other_effective_end_date").alias("other_end_date"),
+        F.countDistinct("d.void_id").alias("other_vacancy_record_count"),
+        F.concat_ws(", ", F.sort_array(F.collect_set("d.other_vacancy_type_reason"))).alias("other_vacancy_type_reasons"),
+        F.concat_ws(", ", F.sort_array(F.collect_set("d.void_type"))).alias("other_void_types"),
     )
 )
 
@@ -1187,17 +1458,62 @@ void_days = (
     .withColumn("vacancy_date", F.explode("vacancy_date_array"))
     .drop("vacancy_date_array")
     .dropDuplicates(["property_id", "vacancy_date", "void_id"])
+    .withColumn(
+        "void_day_rank",
+        F.row_number().over(
+            Window.partitionBy("property_id", "vacancy_date").orderBy(
+                F.col("void_id").asc_nulls_last()
+            )
+        ),
+    )
+    .filter(F.col("void_day_rank") == 1)
+    .drop("void_day_rank")
+)
+
+other_days = (
+    void_intervals.select(
+        "void_id",
+        "property_id",
+        "void_reference",
+        "other_vacancy_type_reason",
+        "void_type",
+        F.when(
+            F.col("other_effective_start_date")
+            <= F.date_sub(F.col("other_effective_end_exclusive"), 1),
+            F.sequence(
+                F.col("other_effective_start_date"),
+                F.date_sub(F.col("other_effective_end_exclusive"), 1),
+                F.expr("interval 1 day"),
+            )
+        )
+        .otherwise(EMPTY_DATE_ARRAY)
+        .alias("vacancy_date_array"),
+    )
+    .withColumn("vacancy_date", F.explode("vacancy_date_array"))
+    .drop("vacancy_date_array")
+    .dropDuplicates(["property_id", "vacancy_date", "void_id"])
+    .withColumn(
+        "other_day_rank",
+        F.row_number().over(
+            Window.partitionBy("property_id", "vacancy_date").orderBy(
+                F.col("void_id").asc_nulls_last()
+            )
+        ),
+    )
+    .filter(F.col("other_day_rank") == 1)
+    .drop("other_day_rank")
 )
 
 vacancy_day_fact = (
     vacancy_days.alias("v")
     .join(void_days.alias("d"), ["property_id", "vacancy_date"], "left")
+    .join(other_days.alias("o"), ["property_id", "vacancy_date"], "left")
     .withColumn("is_untenantable", F.col("d.void_id").isNotNull())
-    .withColumn("is_other", F.lit(False))
+    .withColumn("is_other", F.col("o.void_id").isNotNull())
     .withColumn(
         "day_type",
-        F.when(F.col("is_untenantable"), F.lit("Untenantable"))
-        .when(F.col("is_other"), F.lit("Other"))
+        F.when(F.col("is_other"), F.lit("Other"))
+        .when(F.col("is_untenantable"), F.lit("Untenantable"))
         .otherwise(F.lit("Tenantable")),
     )
     .withColumn("vacancy_day_count", F.lit(1))
@@ -1205,8 +1521,11 @@ vacancy_day_fact = (
         "tenantable_day_count",
         F.when(~F.col("is_untenantable") & ~F.col("is_other"), 1).otherwise(0),
     )
-    .withColumn("untenantable_day_count", F.when(F.col("is_untenantable"), 1).otherwise(0))
-    .withColumn("other_day_count", F.lit(0))
+    .withColumn(
+        "untenantable_day_count",
+        F.when(F.col("is_untenantable") & ~F.col("is_other"), 1).otherwise(0),
+    )
+    .withColumn("other_day_count", F.when(F.col("is_other"), 1).otherwise(0))
     .select(
         "vacancy_id",
         "property_id",
@@ -1247,6 +1566,10 @@ vacancy_day_fact = (
         F.col("d.property_condition_code").alias("void_property_condition_code"),
         F.col("d.property_condition").alias("void_property_condition"),
         F.col("d.key_register_engagement_id").alias("key_register_engagement_id"),
+        F.col("o.void_id").alias("other_void_id"),
+        F.col("o.void_reference").alias("other_void_reference"),
+        F.col("o.other_vacancy_type_reason").alias("other_vacancy_type_reason"),
+        F.col("o.void_type").alias("other_void_type"),
         "report_state",
     )
 )
@@ -1302,6 +1625,7 @@ fact_vacancy_interval_vic = (
     )
     .join(vacancy_void_summary, "vacancy_id", "left")
     .join(vacancy_void_selected, "vacancy_id", "left")
+    .join(vacancy_other_summary, "vacancy_id", "left")
     .join(vacancy_keys_selected, "vacancy_id", "left")
     .join(vacancy_exception_summary, "vacancy_id", "left")
     .join(property_exception_summary, "property_id", "left")
@@ -1320,9 +1644,8 @@ fact_vacancy_interval_vic = (
         F.coalesce(F.col("full_untenantable_days"), F.lit(0)),
     )
     .withColumn("full_other_days", F.coalesce(F.col("full_other_days"), F.lit(0)))
-    .withColumn("other_start_date", F.lit(None).cast("date"))
-    .withColumn("other_end_date", F.lit(None).cast("date"))
-    .withColumn("other_days", F.lit(0))
+    .withColumn("other_days", F.col("full_other_days"))
+    .withColumn("other_vacancy_record_count", F.coalesce(F.col("other_vacancy_record_count"), F.lit(0)))
     .withColumn("void_record_count", F.coalesce(F.col("void_record_count"), F.lit(0)))
     .withColumn("has_exception_flag", F.coalesce(F.col("has_exception_flag"), F.lit(0)))
     .withColumn("exception_count", F.coalesce(F.col("exception_count"), F.lit(0)))
@@ -1347,7 +1670,6 @@ keys_staged_vic = (
 
 write_delta(dim_property_vic, "dim_property_vic")
 write_delta(active_rule_parameters, ACTIVE_CONFIG_TABLE)
-write_delta(void_intervals, "fact_void_interval_vic")
 write_delta(vacancy_day_fact, "fact_vacancy_day_vic")
 write_delta(fact_vacancy_interval_vic, "fact_vacancy_interval_vic")
 write_delta(keys_staged_vic, "stg_keys_vic")
@@ -1355,7 +1677,7 @@ write_delta(audit_property_vic, "audit_property_vic")
 write_delta(audit_tenancy_vic, "audit_tenancy_vic")
 write_delta(audit_void_vic, "audit_void_vic")
 write_delta(audit_keys_vic, "audit_keys_vic")
-write_delta(tenancy_interval_exceptions, "audit_exceptions_vic")
+write_delta(audit_exceptions_vic, "audit_exceptions_vic")
 
 
 display(fact_vacancy_interval_vic.orderBy("property_id", "vacancy_start_date"))

@@ -20,7 +20,6 @@ Load these tables from Fabric:
 - `vacancy_reporting.dim_active_vacancy_rule_parameters`
 - `vacancy_reporting.fact_vacancy_day_vic`
 - `vacancy_reporting.fact_vacancy_interval_vic`
-- `vacancy_reporting.fact_void_interval_vic`
 - `vacancy_reporting.audit_property_vic`
 - `vacancy_reporting.audit_tenancy_vic`
 - `vacancy_reporting.audit_void_vic`
@@ -75,6 +74,8 @@ Important counting note:
 - the notebook counts from `vacancy_start_date` through `vacancy_end_exclusive - 1`,
 - so selected-period vacancy days align with `MIN(end_date, report_to_date) - start_date + 1`.
 - if the report is filtered to `2026-03-31`, a vacancy starting on `2026-01-02` contributes `89` days.
+- `Other Days` are sourced from the Void table's other vacancy date range and are mutually exclusive from `Untenantable Days`.
+- `Other Days` are capped to the parent void period. Source other-vacancy ranges outside the parent void are data-quality exceptions.
 
 ## Date Table
 
@@ -130,7 +131,10 @@ This follows the implemented rule:
 
 - vacancy day rows are created from `vacancy_start_date` through `vacancy_end_exclusive - 1`
 - `Void End Date` is treated as inclusive, so void day rows are created from `void_start_date` through `void_end_date`
-- a counted vacancy day is `Tenantable` only when it does not overlap a counted void day
+- a counted vacancy day is `Other` when it overlaps the Void table's other vacancy date range
+- a counted vacancy day is `Untenantable` when it overlaps a void period and is not already classified as `Other`
+- a counted vacancy day is `Tenantable` only when it is neither `Other` nor `Untenantable`
+- other-vacancy counting uses the overlap between the other-vacancy range and the parent void range
 
 ```DAX
 Vacancy Count =
@@ -306,6 +310,9 @@ From `fact_vacancy_interval_vic`:
 - `other_start_date`
 - `other_end_date`
 - `other_days`
+- `other_vacancy_record_count`
+- `other_vacancy_type_reasons`
+- `other_void_types`
 - `key_id`
 - `key_reference`
 - `key_date_received_from_tenant`
@@ -322,6 +329,18 @@ From `fact_vacancy_interval_vic`:
 - `key_property_condition`
 - `meets_21_day_benchmark`
 - `meets_48_day_benchmark`
+
+From `fact_vacancy_day_vic`:
+
+- `vacancy_id`
+- `vacancy_date`
+- `day_type`
+- `void_id`
+- `void_reason`
+- `other_void_id`
+- `other_void_reference`
+- `other_vacancy_type_reason`
+- `other_void_type`
 
 From `dim_active_vacancy_rule_parameters`:
 
@@ -367,6 +386,22 @@ From the `audit_*` tables, expose the fields needed for the `Property Trace` pag
 - `audit_void_vic[void_start_date]`
 - `audit_void_vic[raw_void_end_date]`
 - `audit_void_vic[void_end_date]`
+- `audit_void_vic[void_end_exclusive]`
+- `audit_void_vic[other_vacancy_type_reason]`
+- `audit_void_vic[raw_other_start_date]`
+- `audit_void_vic[other_start_date]`
+- `audit_void_vic[raw_other_end_date]`
+- `audit_void_vic[other_end_date]`
+- `audit_void_vic[other_end_exclusive]`
+- `audit_void_vic[other_start_date_source]`
+- `audit_void_vic[other_end_date_source]`
+- `audit_void_vic[other_effective_start_date]`
+- `audit_void_vic[other_effective_end_date]`
+- `audit_void_vic[other_effective_end_exclusive]`
+- `audit_void_vic[other_vacancy_outside_void_flag]`
+- `audit_void_vic[other_start_date_text]`
+- `audit_void_vic[other_end_date_text]`
+- `audit_void_vic[void_type]`
 - `audit_void_vic[void_reason]`
 - `audit_void_vic[source_date_offset_days]`
 - `audit_keys_vic[key_id]`
@@ -420,7 +455,8 @@ Hide technical columns such as codes, join keys that users do not need, and inte
 
 - Use measures from `fact_vacancy_day_vic` on any page that must respect the selected date range.
 - Treat the `full_*` columns in `fact_vacancy_interval_vic` as lifetime interval totals, not selected-period totals.
-- `other_start_date`, `other_end_date`, and `other_days` are placeholders for the future void-table-based `Other Days` rule. They are currently blank or `0`.
+- `other_start_date`, `other_end_date`, and `other_days` summarize the Void table's other vacancy date range where it overlaps the vacancy.
+- The Void TXT date fields are preferred for `Other Days`; proper date fields are used as fallback when the TXT field is blank or cannot be parsed.
 - Use `vacancy_end_date_display` in business-facing report tables.
 - Use `vacancy_end_date` only when you need the inclusive calculated end date regardless of whether the vacancy is still open.
 - Keep `vacancy_end_exclusive` hidden from normal report users unless you are doing technical validation.

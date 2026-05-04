@@ -21,7 +21,6 @@ Use these model objects:
 - table `dim_property_vic`
 - table `fact_vacancy_interval_vic`
 - table `fact_vacancy_day_vic`
-- table `fact_void_interval_vic`
 - table `dim_active_vacancy_rule_parameters`
 - table `audit_property_vic`
 - table `audit_tenancy_vic`
@@ -324,6 +323,9 @@ Field well:
 - `Columns` = `fact_vacancy_interval_vic[other_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[other_end_date]`
 - `Columns` = `fact_vacancy_interval_vic[other_days]`
+- `Columns` = `fact_vacancy_interval_vic[other_vacancy_type_reasons]`
+- `Columns` = `fact_vacancy_interval_vic[other_void_types]`
+- `Columns` = `fact_vacancy_interval_vic[other_vacancy_record_count]`
 - `Columns` = `fact_vacancy_interval_vic[key_id]`
 - `Columns` = `fact_vacancy_interval_vic[key_reference]`
 - `Columns` = `fact_vacancy_interval_vic[key_vacancy_exemptions_code]`
@@ -380,6 +382,9 @@ Formatting:
 - rename `fact_vacancy_interval_vic[other_start_date]` display label to `Other Start Date`
 - rename `fact_vacancy_interval_vic[other_end_date]` display label to `Other End Date`
 - rename `fact_vacancy_interval_vic[other_days]` display label to `Other Days Source`
+- rename `fact_vacancy_interval_vic[other_vacancy_type_reasons]` display label to `Other Vacancy Reason`
+- rename `fact_vacancy_interval_vic[other_void_types]` display label to `Other Void Type`
+- rename `fact_vacancy_interval_vic[other_vacancy_record_count]` display label to `Other Vacancy Record Count`
 - rename `fact_vacancy_interval_vic[key_id]` display label to `Keys Record ID`
 - rename `fact_vacancy_interval_vic[key_reference]` display label to `Keys Reference`
 - rename `fact_vacancy_interval_vic[key_vacancy_exemptions_code]` display label to `Vacancy Exemption Code`
@@ -432,6 +437,8 @@ Recommended final column order for management:
 - `Other Start Date`
 - `Other End Date`
 - `Other Days Source`
+- `Other Vacancy Reason`
+- `Other Void Type`
 - `Void ID`
 - `Void Reference`
 - `Selected Void Start Date`
@@ -463,7 +470,7 @@ Clarification:
 - `vacancy_end_tenancy_*` columns describe the next tenancy that closes the vacancy.
 - `void_*` columns are the first selected overlapping void row for the vacancy.
 - `overlap_void_*` columns show the overall overlap range across all matching void rows for that vacancy.
-- `other_start_date`, `other_end_date`, and `other_days` are placeholders. They stay blank or `0` until the source rule for `Other Days` is confirmed.
+- `other_start_date`, `other_end_date`, and `other_days` summarize the Void table's other vacancy date range where it overlaps the vacancy.
 
 Behavior:
 
@@ -504,12 +511,15 @@ Field well:
 - `Columns` = `fact_vacancy_day_vic[day_type]`
 - `Columns` = `fact_vacancy_day_vic[void_id]`
 - `Columns` = `fact_vacancy_day_vic[void_reason]`
+- `Columns` = `fact_vacancy_day_vic[other_void_id]`
+- `Columns` = `fact_vacancy_day_vic[other_vacancy_type_reason]`
+- `Columns` = `fact_vacancy_day_vic[other_void_type]`
 
 Formatting:
 
 - sort by `fact_vacancy_day_vic[vacancy_date]` ascending
 
-### Visual 2: Void interval table
+### Visual 2: Void audit table
 
 Visual type:
 
@@ -517,17 +527,32 @@ Visual type:
 
 Field well:
 
-- `Columns` = `fact_void_interval_vic[void_id]`
-- `Columns` = `fact_void_interval_vic[property_id]`
-- `Columns` = `fact_void_interval_vic[void_reference]`
-- `Columns` = `fact_void_interval_vic[void_start_date]`
-- `Columns` = `fact_void_interval_vic[void_end_exclusive]`
-- `Columns` = `fact_void_interval_vic[void_reason]`
-- `Columns` = `fact_void_interval_vic[property_condition]`
+- `Columns` = `audit_void_vic[void_id]`
+- `Columns` = `audit_void_vic[property_id]`
+- `Columns` = `audit_void_vic[void_reference]`
+- `Columns` = `audit_void_vic[void_start_date]`
+- `Columns` = `audit_void_vic[void_end_date]`
+- `Columns` = `audit_void_vic[void_end_exclusive]`
+- `Columns` = `audit_void_vic[other_start_date]`
+- `Columns` = `audit_void_vic[other_end_date]`
+- `Columns` = `audit_void_vic[other_effective_start_date]`
+- `Columns` = `audit_void_vic[other_effective_end_date]`
+- `Columns` = `audit_void_vic[other_vacancy_outside_void_flag]`
+- `Columns` = `audit_void_vic[other_vacancy_type_reason]`
+- `Columns` = `audit_void_vic[void_type]`
+- `Columns` = `audit_void_vic[void_reason]`
+- `Columns` = `audit_void_vic[property_condition]`
 
 Formatting:
 
 - rename `void_end_exclusive` display label to `Void End Exclusive Boundary`
+- rename `other_start_date` display label to `Other Start Date`
+- rename `other_end_date` display label to `Other End Date`
+- rename `other_effective_start_date` display label to `Counted Other Start Date`
+- rename `other_effective_end_date` display label to `Counted Other End Date`
+- rename `other_vacancy_outside_void_flag` display label to `Other Outside Void`
+- rename `other_vacancy_type_reason` display label to `Other Vacancy Reason`
+- rename `void_type` display label to `Void Type`
 
 Note:
 
@@ -718,6 +743,21 @@ Field well:
 - `Columns` = `audit_void_vic[void_start_date]`
 - `Columns` = `audit_void_vic[raw_void_end_date]`
 - `Columns` = `audit_void_vic[void_end_date]`
+- `Columns` = `audit_void_vic[void_end_exclusive]`
+- `Columns` = `audit_void_vic[other_vacancy_type_reason]`
+- `Columns` = `audit_void_vic[raw_other_start_date]`
+- `Columns` = `audit_void_vic[other_start_date]`
+- `Columns` = `audit_void_vic[raw_other_end_date]`
+- `Columns` = `audit_void_vic[other_end_date]`
+- `Columns` = `audit_void_vic[other_end_exclusive]`
+- `Columns` = `audit_void_vic[other_start_date_source]`
+- `Columns` = `audit_void_vic[other_end_date_source]`
+- `Columns` = `audit_void_vic[other_effective_start_date]`
+- `Columns` = `audit_void_vic[other_effective_end_date]`
+- `Columns` = `audit_void_vic[other_vacancy_outside_void_flag]`
+- `Columns` = `audit_void_vic[other_start_date_text]`
+- `Columns` = `audit_void_vic[other_end_date_text]`
+- `Columns` = `audit_void_vic[void_type]`
 - `Columns` = `audit_void_vic[void_reason]`
 - `Columns` = `audit_void_vic[property_condition]`
 - `Columns` = `audit_void_vic[source_date_offset_days]`
@@ -735,6 +775,21 @@ Formatting:
 - rename `audit_void_vic[void_start_date]` display label to `Adjusted Void Start Date`
 - rename `audit_void_vic[raw_void_end_date]` display label to `Raw Void End Date`
 - rename `audit_void_vic[void_end_date]` display label to `Adjusted Void End Date`
+- rename `audit_void_vic[void_end_exclusive]` display label to `Void End Exclusive Boundary`
+- rename `audit_void_vic[other_vacancy_type_reason]` display label to `Other Vacancy Reason`
+- rename `audit_void_vic[raw_other_start_date]` display label to `Raw Other Start Date`
+- rename `audit_void_vic[other_start_date]` display label to `Adjusted Other Start Date`
+- rename `audit_void_vic[raw_other_end_date]` display label to `Raw Other End Date`
+- rename `audit_void_vic[other_end_date]` display label to `Adjusted Other End Date`
+- rename `audit_void_vic[other_end_exclusive]` display label to `Other End Exclusive Boundary`
+- rename `audit_void_vic[other_start_date_source]` display label to `Other Start Date Source`
+- rename `audit_void_vic[other_end_date_source]` display label to `Other End Date Source`
+- rename `audit_void_vic[other_effective_start_date]` display label to `Counted Other Start Date`
+- rename `audit_void_vic[other_effective_end_date]` display label to `Counted Other End Date`
+- rename `audit_void_vic[other_vacancy_outside_void_flag]` display label to `Other Outside Void`
+- rename `audit_void_vic[other_start_date_text]` display label to `Other Start Date Text`
+- rename `audit_void_vic[other_end_date_text]` display label to `Other End Date Text`
+- rename `audit_void_vic[void_type]` display label to `Void Type`
 - rename `audit_void_vic[void_reason]` display label to `Void Reason`
 - rename `audit_void_vic[property_condition]` display label to `Void Property Condition`
 - rename `audit_void_vic[source_date_offset_days]` display label to `Void Source Offset Days`
@@ -857,6 +912,9 @@ Field well:
 - `Columns` = `fact_vacancy_day_vic[day_type]`
 - `Columns` = `fact_vacancy_day_vic[void_id]`
 - `Columns` = `fact_vacancy_day_vic[void_reason]`
+- `Columns` = `fact_vacancy_day_vic[other_void_id]`
+- `Columns` = `fact_vacancy_day_vic[other_vacancy_type_reason]`
+- `Columns` = `fact_vacancy_day_vic[other_void_type]`
 
 Formatting:
 
@@ -890,6 +948,8 @@ Current implemented exception rule:
 
 - `TENANCY_OVERLAPS_VOID`
   A tenancy interval overlaps a void interval for the same property by at least one day.
+- `OTHER_VACANCY_OUTSIDE_VOID`
+  A Void row's other-vacancy range starts before the void start date or ends after the void end date. Counting is capped to the parent void overlap.
 
 Page behavior:
 

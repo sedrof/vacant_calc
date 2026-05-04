@@ -55,7 +55,6 @@ Why:
 - it is the shared property hub for:
   - `fact_vacancy_interval_vic`
   - `fact_vacancy_day_vic`
-  - `fact_void_interval_vic`
   - `audit_property_vic`
   - `audit_tenancy_vic`
   - `audit_void_vic`

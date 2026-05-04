@@ -447,12 +447,22 @@ Columns currently used by the notebook:
 - `DataSet.PROPERTY_CONDITION`
 - `DataSet.PROPERTY_CONDITION_D`
 - `DataSet.KEY_REGISTER_ENG_ID`
-(DataSet.OTHER_VACANCY_TYPE_REASON],
-[DataSet.OTHER_VACANCY_FROM_DATE],
-(DataSet.OTHER_VACANCY_TO_DATE],
-(DataSet. OTHER_VAC_FROM DATE_TXT],
-(DataSet.OTHER_VAC_TO_DATE_TXT),
- [DataSet.VOID_TYPE],
+- `DataSet.OTHER_VACANCY_TYPE_REASON`
+- `DataSet.OTHER_VACANCY_FROM_DATE`
+- `DataSet.OTHER_VACANCY_TO_DATE`
+- `DataSet.OTHER_VAC_FROM_DATE_TXT`
+- `DataSet.OTHER_VAC_TO_DATE_TXT`
+- `DataSet.VOID_TYPE`
+
+Other vacancy fields:
+
+- `OTHER_VAC_FROM_DATE_TXT` and `OTHER_VAC_TO_DATE_TXT` are the preferred date range used for `Other Days`.
+- If either TXT field is blank or cannot be parsed, the notebook falls back to `OTHER_VACANCY_FROM_DATE` or `OTHER_VACANCY_TO_DATE`.
+- `OTHER_VACANCY_TO_DATE` is treated as an inclusive business date.
+- Parsed TXT dates are not raw-offset shifted. Fallback date fields use the same raw source date offset as the other Void date fields.
+- TXT fields are still retained unchanged for audit/display.
+- The other-vacancy range must sit inside the parent `VOID_FROM_DATE` / `VOID_TO_DATE` range. If it exceeds the void range, counting is capped to the void overlap and `audit_exceptions_vic` flags `OTHER_VACANCY_OUTSIDE_VOID`.
+
 ### 4. `Keys`
 
 Purpose:
@@ -525,6 +535,5 @@ Only extend the current source map after confirming the business rule that needs
 
 Likely future areas:
 
-- a real definition for `Other Days`,
 - resident-level enrichments from `Resident_Data`,
 - formal exemption logic if approved by the business.

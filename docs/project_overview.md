@@ -34,8 +34,11 @@ The workbook establishes the most important date rules:
 3. A new property vacancy starts from the property start date, not from a tenancy end.
 4. Void periods are a subset of the vacancy period.
 5. `Void End Date` is a business-facing inclusive date. For counting, the notebook stores `void_end_exclusive = void_end_date + 1`.
-6. `Tenantable Days` are vacancy days that are not in a void period.
-7. A property's vacancy period permanently ends if the property ends (e.g., decommissioned). The vacancy inclusive end date stops on the `property_end_date`.
+6. `Other Days` come from the Void table's `OTHER_VACANCY_FROM_DATE` and `OTHER_VACANCY_TO_DATE` range. `OTHER_VACANCY_TO_DATE` is inclusive.
+7. `Other Days` must sit inside the parent void period. If the source range exceeds the void period, the notebook caps counting to the void overlap and flags an exception.
+8. A vacancy day classified as `Other` is not also counted as `Untenantable`.
+9. `Tenantable Days` are vacancy days that are neither untenantable nor other.
+10. A property's vacancy period permanently ends if the property ends (e.g., decommissioned). The vacancy inclusive end date stops on the `property_end_date`.
 
 The vacancy model now counts the start boundary day in `Vacancy Days`.
 
@@ -129,7 +132,6 @@ The notebook creates these reporting tables:
 - `vacancy_reporting.dim_active_vacancy_rule_parameters`
 - `vacancy_reporting.fact_vacancy_day_vic`
 - `vacancy_reporting.fact_vacancy_interval_vic`
-- `vacancy_reporting.fact_void_interval_vic`
 - `vacancy_reporting.stg_keys_vic`
 - `vacancy_reporting.audit_property_vic`
 - `vacancy_reporting.audit_tenancy_vic`
@@ -149,7 +151,7 @@ These decisions are intentional and should not be changed without evidence:
 - `Vacancy ID` is formatted as `property_id_dd/MM/yy`.
 - The solution also publishes an exception table for known invalid source patterns such as tenancy intervals overlapping void intervals for the same property.
 - Tenancy rows with current stage `Allocation Cancelled` are kept in the tenancy audit output for traceability, but are excluded from vacancy construction and exception generation.
-- `Other Days` remains `0` because no valid source rule has been confirmed. Placeholder interval fields `other_start_date`, `other_end_date`, and `other_days` are published for the future void-table mapping.
+- `Other Days` are derived from the Void table's other vacancy date range where it overlaps a vacancy.
 - `Property Program` is currently used as `Property Source`.
 
 ## Delivery Sequence
@@ -167,7 +169,6 @@ Use this order for implementation:
 
 These items still require business confirmation before expansion:
 
-- The exact void-table rule and source fields for `Other Days`
 - Whether any source tables need a permanent raw date shift
 - Whether `Property Program` is definitively the right field for `Property Source`
 

@@ -322,7 +322,6 @@ Field well:
 - `Columns` = `[Other Days]`
 - `Columns` = `fact_vacancy_interval_vic[other_start_date]`
 - `Columns` = `fact_vacancy_interval_vic[other_end_date]`
-- `Columns` = `fact_vacancy_interval_vic[other_days]`
 - `Columns` = `fact_vacancy_interval_vic[other_vacancy_type_reasons]`
 - `Columns` = `fact_vacancy_interval_vic[other_void_types]`
 - `Columns` = `fact_vacancy_interval_vic[other_vacancy_record_count]`
@@ -381,7 +380,6 @@ Formatting:
 - rename `[Other Days]` display label to `Other Days`
 - rename `fact_vacancy_interval_vic[other_start_date]` display label to `Other Start Date`
 - rename `fact_vacancy_interval_vic[other_end_date]` display label to `Other End Date`
-- rename `fact_vacancy_interval_vic[other_days]` display label to `Other Days Source`
 - rename `fact_vacancy_interval_vic[other_vacancy_type_reasons]` display label to `Other Vacancy Reason`
 - rename `fact_vacancy_interval_vic[other_void_types]` display label to `Other Void Type`
 - rename `fact_vacancy_interval_vic[other_vacancy_record_count]` display label to `Other Vacancy Record Count`
@@ -436,7 +434,6 @@ Recommended final column order for management:
 - `Other Days`
 - `Other Start Date`
 - `Other End Date`
-- `Other Days Source`
 - `Other Vacancy Reason`
 - `Other Void Type`
 - `Void ID`
@@ -470,7 +467,8 @@ Clarification:
 - `vacancy_end_tenancy_*` columns describe the next tenancy that closes the vacancy.
 - `void_*` columns are the first selected overlapping void row for the vacancy.
 - `overlap_void_*` columns show the overall overlap range across all matching void rows for that vacancy.
-- `other_start_date`, `other_end_date`, and `other_days` summarize the Void table's other vacancy date range where it overlaps the vacancy.
+- `Other Days` must use the `[Other Days]` measure from `fact_vacancy_day_vic`, so it respects the selected date window.
+- `other_start_date` and `other_end_date` are descriptive interval fields and may sit outside the selected date window.
 
 Behavior:
 

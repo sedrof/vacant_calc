@@ -309,7 +309,6 @@ From `fact_vacancy_interval_vic`:
 - `full_other_days`
 - `other_start_date`
 - `other_end_date`
-- `other_days`
 - `other_vacancy_record_count`
 - `other_vacancy_type_reasons`
 - `other_void_types`
@@ -455,7 +454,8 @@ Hide technical columns such as codes, join keys that users do not need, and inte
 
 - Use measures from `fact_vacancy_day_vic` on any page that must respect the selected date range.
 - Treat the `full_*` columns in `fact_vacancy_interval_vic` as lifetime interval totals, not selected-period totals.
-- `other_start_date`, `other_end_date`, and `other_days` summarize the Void table's other vacancy date range where it overlaps the vacancy.
+- `other_start_date` and `other_end_date` summarize the Void table's other vacancy date range where it overlaps the vacancy.
+- Use the `[Other Days]` measure for selected-period other-day counts. Do not use interval-level lifetime columns for selected-period day counts.
 - The Void TXT date fields are preferred for `Other Days`; proper date fields are used as fallback when the TXT field is blank or cannot be parsed.
 - Use `vacancy_end_date_display` in business-facing report tables.
 - Use `vacancy_end_date` only when you need the inclusive calculated end date regardless of whether the vacancy is still open.

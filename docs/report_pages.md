@@ -39,6 +39,9 @@ Use these measures:
 - `[Avg Tenantable Days]`
 - `[Avg Untenantable Days]`
 - `[Avg Other Days]`
+- `[Avg Tenantable Days When Present]`
+- `[Avg Untenantable Days When Present]`
+- `[Avg Other Days When Present]`
 - `[Vacancies LE 21 Days]`
 - `[Vacancies GT 21 Days]`
 - `[Vacancies LE 48 Days]`
@@ -363,9 +366,12 @@ For each card series, navigate to **Format pane > Reference labels** and add/con
   * *Untenantable %* Value: Hex `#ED8936` (Orange).
   * *Other %* Value: Hex `#718096` (Gray).
 * **Card 3 (Average Duration):**
-  * *Avg Tenantable* Value: Hex `#319795` (Teal).
-  * *Avg Untenantable* Value: Hex `#ED8936` (Orange).
-  * *Avg Other* Value: Hex `#718096` (Gray).
+  * *Tenantable / All* Value: Hex `#319795` (Teal).
+  * *Tenantable / >0 Only* Value: Hex `#319795` (Teal).
+  * *Untenantable / All* Value: Hex `#ED8936` (Orange).
+  * *Untenantable / >0 Only* Value: Hex `#ED8936` (Orange).
+  * *Other / All* Value: Hex `#718096` (Gray).
+  * *Other / >0 Only* Value: Hex `#718096` (Gray).
   * *VS. Target (21d)* Value: Apply **Conditional Formatting** based on `[Avg Vacancy Variance to 21d]`. Rule: If value > 0, Hex `#F56565` (Red - over target); if value <= 0, Hex `#48BB78` (Green - under target).
 * **Card 4 (21-Day Benchmark):**
   * *Volume* Value: Hex `#718096` (Gray).
@@ -373,6 +379,51 @@ For each card series, navigate to **Format pane > Reference labels** and add/con
 * **Card 5 (48-Day Benchmark):**
   * *Volume* Value: Hex `#718096` (Gray).
   * *VS. Target (95%)* Value: Apply **Conditional Formatting** based on `[Benchmark 48d Variance]`. Rule: If value >= 0, Hex `#48BB78` (Green); if value < 0, Hex `#F56565` (Red).
+
+##### Light Theme KPI Card Styling
+Use this styling when the Vacancy Detail page uses the clean white-card layout instead of the dark glassmorphic background.
+
+Card container:
+
+- Background = `#FFFFFF`
+- Border = `#E5E7EB`, `1 px`
+- Corner radius = `10 px` to `12 px`
+- Shadow = On, color `#000000`, transparency `75%` to `85%`, blur `10 px` to `14 px`, distance `3 px`
+- Inner padding = `18 px` to `22 px`
+- Keep all five KPI cards the same width and height.
+
+Typography:
+
+- Primary value font = `Segoe UI Semibold`, `Inter SemiBold`, or `Aptos Display`, `24 pt` to `30 pt`
+- Primary label font = `Segoe UI`, `Inter`, or `Aptos`, `12 pt` to `14 pt`
+- Reference label font = same family, `8.5 pt` to `9.5 pt`
+- Primary value color = `#111827`
+- Primary label color = `#6B7280`
+- Divider line color = `#E5E7EB`
+- Reference label text color = `#8A8F98`
+- Reference value color should use the KPI accent color below.
+
+Recommended KPI accent colors:
+
+- Vacancy Count = `#0F766E` (teal)
+- Vacancy Days = `#2563EB` (blue)
+- Tenantable Days = `#15803D` (green)
+- Untenantable Days = `#C2410C` (orange)
+- Other Days = `#6B7280` (neutral gray)
+
+Reference label wording for the current card layout:
+
+- Vacancy Count card:
+  * `Has Tenantable`
+  * `Has Untenantable`
+  * `Has Other`
+- Vacancy Days card:
+  * `Avg (All)`
+- Tenantable, Untenantable, and Other cards:
+  * `Avg (All)`
+  * `Avg (>0 Only)`
+
+Color the reference values, not the full label text. This keeps the cards readable while still giving each KPI a clear semantic cue.
 
 ##### Custom Outline Icon Integration
 For each card, navigate to **Format pane > Cards > Image** and upload the conformed separated PNG icons:
@@ -477,21 +528,37 @@ Field well:
 
 Reference Labels (Secondary Metrics):
 
-- `Label 1` = `Avg Tenantable`
+- `Label 1` = `Tenantable / All`
   * Value = `[Avg Tenantable Days]`
   * Color = HSL Teal accent
-- `Label 2` = `Avg Untenantable`
+- `Label 2` = `Tenantable / >0 Only`
+  * Value = `[Avg Tenantable Days When Present]`
+  * Color = HSL Teal accent
+- `Label 3` = `Untenantable / All`
   * Value = `[Avg Untenantable Days]`
   * Color = HSL Orange accent
-- `Label 3` = `Avg Other`
+- `Label 4` = `Untenantable / >0 Only`
+  * Value = `[Avg Untenantable Days When Present]`
+  * Color = HSL Orange accent
+- `Label 5` = `Other / All`
   * Value = `[Avg Other Days]`
   * Color = Gray
-- `Label 4` = `VS. Target (21d)`
+- `Label 6` = `Other / >0 Only`
+  * Value = `[Avg Other Days When Present]`
+  * Color = Gray
+- `Label 7` = `VS. Target (21d)`
   * Value = `[Avg Vacancy Variance to 21d]` (formatted as `+0.0;-0.0`)
   * Color = Red if positive (above benchmark), Green if negative (below benchmark)
 
 Accent / Icon:
 - Glowing key and shield icon in the upper right.
+
+Tooltip / explanation:
+
+- Add a report tooltip for this card with two short rows:
+  * `All` = divides by every visible vacancy.
+  * `>0 Only` = divides only by vacancies where that day type is greater than zero.
+- Keep this explanation in the tooltip or visual subtitle rather than adding a large text box to the page.
 
 ---
 

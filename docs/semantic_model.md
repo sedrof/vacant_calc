@@ -146,6 +146,22 @@ Average Vacancy Days =
 DIVIDE ( [Vacancy Days], [Vacancy Count] )
 ```
 
+The average measures above and below answer the "average across all visible vacancies" question. For every day-type average, also add a matching `When Present` measure so the report can show the average only across vacancies where that day type is greater than `0`. This applies equally to `Tenantable Days`, `Untenantable Days`, and `Other Days`.
+
+Example:
+
+- if 3 vacancies have `Other Days` of `0`, `0`, and `5`,
+- `[Avg Other Days]` across all vacancies = `5 / 3 = 1.67`,
+- `[Avg Other Days When Present]` = `5 / 1 = 5`.
+
+The same concept applies to tenantable and untenantable averages:
+
+- if 3 vacancies have `Untenantable Days` of `0`, `4`, and `8`,
+- `[Avg Untenantable Days]` across all vacancies = `12 / 3 = 4`,
+- `[Avg Untenantable Days When Present]` = `12 / 2 = 6`.
+
+Use the all-vacancy averages to show portfolio-wide contribution. Use the `When Present` measures to show the typical duration among affected vacancies for that specific day type. In the report visual, label these as `>0 Only` so users do not confuse `Present` with currently open or currently active vacancies.
+
 ```DAX
 Vacancies LE 21 Days =
 SUMX (
@@ -339,9 +355,48 @@ DIVIDE([Other Days], [Vacancy Count])
 ```
 
 ```DAX
+Avg Tenantable Days When Present =
+AVERAGEX (
+    FILTER (
+        VALUES ( fact_vacancy_interval_vic[vacancy_id] ),
+        CALCULATE ( [Tenantable Days] ) > 0
+    ),
+    CALCULATE ( [Tenantable Days] )
+)
+```
+
+```DAX
+Avg Untenantable Days When Present =
+AVERAGEX (
+    FILTER (
+        VALUES ( fact_vacancy_interval_vic[vacancy_id] ),
+        CALCULATE ( [Untenantable Days] ) > 0
+    ),
+    CALCULATE ( [Untenantable Days] )
+)
+```
+
+```DAX
+Avg Other Days When Present =
+AVERAGEX (
+    FILTER (
+        VALUES ( fact_vacancy_interval_vic[vacancy_id] ),
+        CALCULATE ( [Other Days] ) > 0
+    ),
+    CALCULATE ( [Other Days] )
+)
+```
+
+```DAX
 Avg Vacancy Variance to 21d = 
 [Average Vacancy Days] - 21
 ```
+
+Display guidance:
+
+- label `[Avg Tenantable Days]`, `[Avg Untenantable Days]`, and `[Avg Other Days]` as `All` averages,
+- label the `When Present` measures as `>0 Only` averages,
+- keep `[Average Vacancy Days]` as the primary average because every visible vacancy contributes at least one vacancy day in the selected period.
 
 ### Card 4: 21-Day Benchmark Reference Labels
 ```DAX

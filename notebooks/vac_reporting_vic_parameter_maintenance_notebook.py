@@ -1,7 +1,6 @@
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
-
 # Fabric notebook parameters
 OUTPUT_DATABASE = "vacancy_reporting"
 CONFIG_TABLE = "cfg_vacancy_rule_parameters"
@@ -15,7 +14,7 @@ EXECUTE_CHANGES = True
 # - "apply_rule_updates"
 ACTION = "apply_rule_updates"
 
-# Replace these examples with the change set you actually want to apply.
+# The updates you want to apply.
 # Each entry becomes the new active row for that rule_name.
 RULE_UPDATES = [
     {
@@ -69,14 +68,12 @@ RULE_UPDATES = [
     },
 ]
 
-
 config_table_fqn = f"{OUTPUT_DATABASE}.{CONFIG_TABLE}"
 
 if not spark.catalog.tableExists(config_table_fqn):
     raise ValueError(
-        f"Config table {config_table_fqn} does not exist. Run vacancy_reporting_vic_notebook.py first."
+        f"Config table {config_table_fqn} does not exist. Run the conformed vacancy modular pipeline first."
     )
-
 
 def load_config():
     return (
@@ -85,7 +82,6 @@ def load_config():
         .withColumn("updated_at", F.to_timestamp("updated_at"))
         .withColumn("is_active", F.col("is_active").cast("boolean"))
     )
-
 
 def latest_active_rules(df):
     window = Window.partitionBy("rule_name").orderBy(
@@ -99,7 +95,6 @@ def latest_active_rules(df):
         .drop("rule_rank")
         .orderBy("rule_name")
     )
-
 
 config_df = load_config()
 
@@ -150,7 +145,7 @@ elif ACTION == "apply_rule_updates":
         .saveAsTable(config_table_fqn)
     )
 
-    print("Updated active rule parameters")
+    print("Updated active rule parameters successfully.")
     display(latest_active_rules(load_config()))
 else:
     raise ValueError(f"Unsupported ACTION: {ACTION}")

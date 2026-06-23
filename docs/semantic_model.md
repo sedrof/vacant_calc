@@ -15,7 +15,7 @@ The date slicer is not limited to quarters or fixed periods. Management can choo
 
 Load these tables from Fabric:
 
-- `` `Evolve-TechOne`.Shortcut.dbo.dim_date ``
+- `vacancy_reporting.dim_date`
 - `vacancy_reporting.dim_property_vic`
 - `vacancy_reporting.dim_active_vacancy_rule_parameters`
 - `vacancy_reporting.fact_vacancy_day_vic`
@@ -81,7 +81,7 @@ Important counting note:
 
 Use the existing physical table:
 
-- `` `Evolve-TechOne`.Shortcut.dbo.dim_date ``
+- `vacancy_reporting.dim_date`
 
 Recommended semantic model settings:
 
@@ -249,6 +249,112 @@ Use `Vacancy Overlaps Selected Period` as the main row-visibility filter on deta
 
 Use `Property Overlaps Selected Period` only where the business explicitly wants to filter by property lifecycle overlap with the selected date window.
 
+## Calculated Columns (in `fact_vacancy_interval_vic`)
+
+To support the Vacancy Duration Distribution Chart, add these calculated columns to categorise and sort vacancy durations:
+
+```DAX
+Vacancy Duration Bracket = 
+VAR Days = [full_vacancy_days]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK(Days), "Unknown",
+        Days <= 7, "0-7 Days",
+        Days <= 14, "8-14 Days",
+        Days <= 21, "15-21 Days (Target 21)",
+        Days <= 35, "22-35 Days",
+        Days <= 48, "36-48 Days (Target 48)",
+        "49+ Days"
+    )
+```
+
+```DAX
+Vacancy Duration Bracket Sort = 
+VAR Days = [full_vacancy_days]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK(Days), 99,
+        Days <= 7, 1,
+        Days <= 14, 2,
+        Days <= 21, 3,
+        Days <= 35, 4,
+        Days <= 48, 5,
+        6
+    )
+```
+
+## KPI Reference Label Measures
+
+Implement these measures to back the reference labels in the new Power BI Card visuals:
+
+### Card 1: Vacancy Count Reference Labels
+```DAX
+Open Vacancy Count = 
+CALCULATE(
+    [Vacancy Count],
+    ISBLANK(fact_vacancy_interval_vic[vacancy_end_date_display])
+)
+```
+
+```DAX
+Closed Vacancy Count = 
+CALCULATE(
+    [Vacancy Count],
+    NOT(ISBLANK(fact_vacancy_interval_vic[vacancy_end_date_display]))
+)
+```
+
+### Card 2: Vacancy Days Reference Labels
+```DAX
+Tenantable Days Pct = 
+DIVIDE([Tenantable Days], [Vacancy Days])
+```
+
+```DAX
+Untenantable Days Pct = 
+DIVIDE([Untenantable Days], [Vacancy Days])
+```
+
+```DAX
+Other Days Pct = 
+DIVIDE([Other Days], [Vacancy Days])
+```
+
+### Card 3: Average Duration Reference Labels
+```DAX
+Avg Tenantable Days = 
+DIVIDE([Tenantable Days], [Vacancy Count])
+```
+
+```DAX
+Avg Untenantable Days = 
+DIVIDE([Untenantable Days], [Vacancy Count])
+```
+
+```DAX
+Avg Other Days = 
+DIVIDE([Other Days], [Vacancy Count])
+```
+
+```DAX
+Avg Vacancy Variance to 21d = 
+[Average Vacancy Days] - 21
+```
+
+### Card 4: 21-Day Benchmark Reference Labels
+```DAX
+Benchmark 21d Variance = 
+[Pct LE 21 Days] - 0.80
+```
+
+### Card 5: 48-Day Benchmark Reference Labels
+```DAX
+Benchmark 48d Variance = 
+[Pct LE 48 Days] - 0.95
+```
+
 ## Fields To Expose
 
 Expose these business-facing fields.
@@ -257,6 +363,7 @@ From `dim_property_vic`:
 
 - `property_number`
 - `property_short_address`
+- `is_standard_address`
 - `suburb`
 - `entity`
 - `ownership`
@@ -355,6 +462,7 @@ From the `audit_*` tables, expose the fields needed for the `Property Trace` pag
 - `audit_property_vic[property_id]`
 - `audit_property_vic[property_number]`
 - `audit_property_vic[property_short_address]`
+- `audit_property_vic[is_standard_address]`
 - `audit_property_vic[property_type]`
 - `audit_property_vic[property_program]`
 - `audit_property_vic[current_stage]`
@@ -466,6 +574,8 @@ Hide technical columns such as codes, join keys that users do not need, and inte
 - `vacancy_start_tenancy_*` fields represent the tenancy that ended into the vacancy.
 - `vacancy_end_tenancy_*` fields represent the next tenancy that closes the vacancy. For initial property vacancies, the start-side tenancy fields are blank by design.
 - Keep the global `dim_date[date]` slicer. Do not replace it with slicers on `vacancy_start_date` or `vacancy_end_date`.
+- Use `dim_property_vic[is_standard_address]` for standard-address filtering instead of DAX text functions such as `SEARCH`, `FIND`, or `CONTAINSSTRING`.
+- If a measure must enforce the standard-address filter, use `KEEPFILTERS ( TREATAS ( { TRUE }, dim_property_vic[is_standard_address] ) )`. Prefer a visual/page/report-level boolean filter where possible.
 - If a detail visual should show only vacancies relevant to the selected window, use a visual-level filter with `Vacancy Overlaps Selected Period = 1`.
 - If a visual should also respect property lifecycle overlap, add `Property Overlaps Selected Period = 1` as an additional visual-level filter.
 - The `Property Trace` page should be driven primarily by `property_id`, not by the global date slicer.

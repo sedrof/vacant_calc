@@ -29,6 +29,7 @@ Columns currently used by the notebook:
 - `DataSet.PROPERTYID`
 - `DataSet.PROPERTYNUMBER`
 - `DataSet.PROPERTYSHORTADDRESS`
+  Used for display and for deriving `dim_property_vic[is_standard_address]`.
 - `DataSet.SUBURB`
 - `DataSet.STATE`
 - `DataSet.POSTCODE`
@@ -528,6 +529,7 @@ This is currently enough to explain how vacancy boundaries were derived. A futur
 - If the confirmed TechOne rule is that source dates are one day behind, set `property_source_date_offset`, `tenancy_source_date_offset`, `void_source_date_offset`, and `keys_source_date_offset` to `1`.
 - The notebook stores vacancy intervals using an exclusive end boundary for reliable day counting.
 - The report uses the daily fact table as the main date-filtering layer.
+- `dim_property_vic[is_standard_address]` is derived from `PROPERTYSHORTADDRESS` and is intended to replace report-time address text searches. It does not filter source rows in the notebook.
 
 ## Future Extensions
 

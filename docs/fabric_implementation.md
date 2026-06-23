@@ -12,9 +12,12 @@ The implementation has three layers:
 
 ## Files Used
 
-Notebook:
+Notebooks (Medallion Pipeline):
 
-- `../vacancy_reporting_vic_notebook.py`
+- `../notebooks/vac_reporting_vic_bronze_notebook.py`
+- `../notebooks/vac_reporting_vic_silver_notebook.py`
+- `../notebooks/vac_reporting_vic_dimensions_notebook.py`
+- `../notebooks/vac_reporting_vic_gold_notebook.py`
 
 Documentation:
 
@@ -25,11 +28,11 @@ Documentation:
 
 Parameter maintenance notebook:
 
-- `../vacancy_rule_parameter_maintenance_notebook.py`
+- `../notebooks/vac_reporting_vic_parameter_maintenance_notebook.py`
 
-Existing shared date dimension:
+Conformed local date dimension (replicated in the local database):
 
-- `` `Evolve-TechOne`.Shortcut.dbo.dim_date ``
+- `vacancy_reporting.dim_date`
 
 ## Step 1: Review The Inputs
 
@@ -44,35 +47,47 @@ The date window is management-selected. Do not assume quarter-only reporting. Th
 
 Do not start model or report work before confirming the vacancy boundary logic and the intended day-counting rule.
 
-## Step 2: Create And Run The Notebook
+## Step 2: Create And Run The Medallion Notebook Pipeline
 
-1. Create a new Spark notebook in Fabric.
-2. Paste the content of `../vacancy_reporting_vic_notebook.py`.
-3. Review the top parameters:
-   - `WAREHOUSE_PREFIX`
-   - `OUTPUT_DATABASE`
-   - `TARGET_STATE`
-   - `AS_AT_DATE`
-4. Run the notebook.
+To process data and build the analytical model, execute the notebooks in sequence:
 
-On first run, the notebook will also create the config table if it does not already exist:
+1. **Run the Bronze Ingestion Notebook (`../notebooks/vac_reporting_vic_bronze_notebook.py`):**
+   * Paste the Bronze code into a Fabric notebook.
+   * Ingests TechOne tables 1:1 into raw Delta staging tables:
+     * `vacancy_reporting.Bronze_TechOne_Property`
+     * `vacancy_reporting.Bronze_TechOne_Tenancy`
+     * `vacancy_reporting.Bronze_TechOne_Void`
+     * `vacancy_reporting.Bronze_TechOne_Keys`
 
-- `vacancy_reporting.cfg_vacancy_rule_parameters`
+2. **Run the Silver Standardization Notebook (`../notebooks/vac_reporting_vic_silver_notebook.py`):**
+   * Paste the Silver code into a Fabric notebook.
+   * Standardizes data types, performs timezone shifting (`Australia/Melbourne`), asserts column completeness (`ensure_columns`), and writes conformed Silver tables:
+     * `vacancy_reporting.silver_techone_property`
+     * `vacancy_reporting.silver_techone_tenancy`
+     * `vacancy_reporting.silver_techone_void`
+     * `vacancy_reporting.silver_techone_keys`
 
-The notebook then writes these reporting tables:
+3. **Run the conformed Dimensions Notebook (`../notebooks/vac_reporting_vic_dimensions_notebook.py`):**
+   * Paste the Dimensions code into a Fabric notebook.
+   * Builds conformed Gold dimension:
+     * `vacancy_reporting.dim_property_vic`
 
-- `vacancy_reporting.dim_property_vic`
-- `vacancy_reporting.dim_active_vacancy_rule_parameters`
-- `vacancy_reporting.fact_vacancy_day_vic`
-- `vacancy_reporting.fact_vacancy_interval_vic`
-- `vacancy_reporting.stg_keys_vic`
-- `vacancy_reporting.audit_property_vic`
-- `vacancy_reporting.audit_tenancy_vic`
-- `vacancy_reporting.audit_void_vic`
-- `vacancy_reporting.audit_keys_vic`
-- `vacancy_reporting.audit_exceptions_vic`
+4. **Run the Gold Facts & Audits Notebook (`../notebooks/vac_reporting_vic_gold_notebook.py`):**
+   * Paste the Gold code into a Fabric notebook.
+   * Review top parameters (`AS_AT_DATE`).
+   * Loads parameters gracefully (with try-except degradation fallback) and applies vacancy calculation boundaries, exploding intervals to daily grains, and generating exception rules.
+   * The notebook writes these Gold and audit tables:
+     * `vacancy_reporting.dim_active_vacancy_rule_parameters`
+     * `vacancy_reporting.fact_vacancy_day_vic`
+     * `vacancy_reporting.fact_vacancy_interval_vic`
+     * `vacancy_reporting.stg_keys_vic`
+     * `vacancy_reporting.audit_property_vic`
+     * `vacancy_reporting.audit_tenancy_vic`
+     * `vacancy_reporting.audit_void_vic`
+     * `vacancy_reporting.audit_keys_vic`
+     * `vacancy_reporting.audit_exceptions_vic`
 
-The vacancy interval table also includes:
+The vacancy interval table includes:
 
 - overlapping void start and end values where available,
 - one representative keys row per vacancy using the confirmed `PARENT_ENGAGEMENT_ID = property_id` mapping.
@@ -96,7 +111,7 @@ Review the active date-correction rules before building the semantic model.
 
 Use:
 
-- `../vacancy_rule_parameter_maintenance_notebook.py`
+- `../notebooks/vac_reporting_vic_parameter_maintenance_notebook.py`
 
 Recommended notebook flow:
 
@@ -106,7 +121,7 @@ Recommended notebook flow:
 4. Change `ACTION` to `"apply_rule_updates"`.
 5. Set `EXECUTE_CHANGES = True`.
 6. Run the maintenance notebook.
-7. Rerun `../vacancy_reporting_vic_notebook.py`.
+7. Rerun `../notebooks/vac_reporting_vic_gold_notebook.py`.
 
 The key rules are:
 
@@ -154,6 +169,7 @@ Before moving to the semantic model, validate the outputs with a small set of ex
 12. Confirm the new `audit_*` tables show both raw and adjusted dates for the same test property.
 13. Confirm `audit_exceptions_vic` returns expected records for known bad source scenarios and stays empty for clean test properties.
 14. Confirm `Property Type`, `Property Program`, and `Property Current Stage` are populated consistently across `dim_property_vic`, the `audit_*` tables, and `fact_vacancy_interval_vic`.
+15. Confirm `dim_property_vic[is_standard_address]` is available for report filtering and that no row counts change unless the report explicitly filters on it.
 
 If any of these checks fail, stop there and fix the notebook before continuing.
 
@@ -192,8 +208,8 @@ The report is operational and regulatory. Keep the layout clear and export-frien
 
 Use this order whenever source data or rule parameters change:
 
-1. Run `../vacancy_rule_parameter_maintenance_notebook.py` if a parameter change is required.
-2. Run `../vacancy_reporting_vic_notebook.py`.
+1. Run `../notebooks/vac_reporting_vic_parameter_maintenance_notebook.py` if a parameter change is required.
+2. Run `../notebooks/vac_reporting_vic_gold_notebook.py`.
 3. Refresh the semantic model.
 4. Validate the report outputs.
 
@@ -222,6 +238,7 @@ Do not change offsets in the report itself for the official reporting process.
 - one representative keys row is selected per vacancy based on property match and date proximity.
 - `Resident_Data` is not required for the current vacancy logic.
 - `Other Days` are derived from the Void table's other vacancy date range and are mutually exclusive from `Untenantable Days`.
+- `is_standard_address` is a report-performance helper flag. It classifies property addresses containing bracket markers as non-standard, but the notebook does not filter on it.
 
 ## Extension Guidance
 

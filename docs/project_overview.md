@@ -86,7 +86,7 @@ If the confirmed business rule is that all relevant TechOne source dates are one
 
 The recommended maintenance path is the Fabric notebook script:
 
-- `../vacancy_rule_parameter_maintenance_notebook.py`
+- `../notebooks/vac_reporting_vic_parameter_maintenance_notebook.py`
 
 ## Required Output
 
@@ -113,26 +113,42 @@ These are not fixed quarter filters. Management can choose any reporting window 
 
 ## Current Solution Design
 
-The implementation uses:
+The implementation uses a robust **Bronze -> Silver -> Gold Medallion architecture** built in Microsoft Fabric:
 
-- a Fabric notebook to build the reporting tables,
-- an existing shared `dim_date` table for date filtering,
-- a semantic model on top of those tables,
-- a Power BI report with summary, detail, audit, config, property-trace, and exception-monitor views.
+- **Medallion Notebook Pipeline:** A series of modular Spark notebooks to stage, standardize, and build the presentation tables.
+- An existing shared `dim_date` table for date filtering.
+- A conformed semantic model.
+- A Power BI report with summary, detail, audit, config, property-trace, and exception-monitor views.
 
-The date slicer filters the daily vacancy fact, and the detail visuals can then use overlap measures to control which vacancy rows are shown for the selected reporting window.
+The modular data pipeline consists of:
 
-The main notebook is:
+1. **Bronze Ingestion:** [vac_reporting_vic_bronze_notebook.py](file:///Users/abdulla/Documents/vacant_calc/notebooks/vac_reporting_vic_bronze_notebook.py) ingests raw source tables 1:1.
+2. **Silver Standardization:** [vac_reporting_vic_silver_notebook.py](file:///Users/abdulla/Documents/vacant_calc/notebooks/vac_reporting_vic_silver_notebook.py) standardizes types, shifting raw UTC to local timezone (`Australia/Melbourne`), and asserting raw schema completeness.
+3. **Dimensions (Gold Dimension):** [vac_reporting_vic_dimensions_notebook.py](file:///Users/abdulla/Documents/vacant_calc/notebooks/vac_reporting_vic_dimensions_notebook.py) constructs the conformed property dimension.
+4. **Gold (Analytical Facts & Audits):** [vac_reporting_vic_gold_notebook.py](file:///Users/abdulla/Documents/vacant_calc/notebooks/vac_reporting_vic_gold_notebook.py) applies the analytical boundary calculations, vacancy explosion, key register selection, and exception audits.
 
-- `../vacancy_reporting_vic_notebook.py`
+The database tables persisted in Fabric are:
 
-The notebook creates these reporting tables:
+### Bronze Layer (Raw Staging)
+- `vacancy_reporting.Bronze_TechOne_Property`
+- `vacancy_reporting.Bronze_TechOne_Tenancy`
+- `vacancy_reporting.Bronze_TechOne_Void`
+- `vacancy_reporting.Bronze_TechOne_Keys`
 
+### Silver Layer (Cleaned & Conformed)
+- `vacancy_reporting.silver_techone_property`
+- `vacancy_reporting.silver_techone_tenancy`
+- `vacancy_reporting.silver_techone_void`
+- `vacancy_reporting.silver_techone_keys`
+
+### Gold Layer (Analytical & Presentation Facts/Dims)
 - `vacancy_reporting.dim_property_vic`
 - `vacancy_reporting.dim_active_vacancy_rule_parameters`
 - `vacancy_reporting.fact_vacancy_day_vic`
 - `vacancy_reporting.fact_vacancy_interval_vic`
 - `vacancy_reporting.stg_keys_vic`
+
+### Gold Layer (Diagnostic & Audits)
 - `vacancy_reporting.audit_property_vic`
 - `vacancy_reporting.audit_tenancy_vic`
 - `vacancy_reporting.audit_void_vic`
@@ -148,6 +164,7 @@ These decisions are intentional and should not be changed without evidence:
 - The vacancy interval output includes overlapping void start/end values and a representative keys row per vacancy.
 - The vacancy interval output also includes tenancy context for the tenancy that ended into the vacancy and the next tenancy that closed it, using `Property.PROPERTYID = Tenancy.PROPID`.
 - Property-facing outputs now also carry `Property Type`, `Property Program`, and `Property Current Stage` so the detail, trace, and exception pages can show consistent property context.
+- `dim_property_vic` publishes `is_standard_address` so report pages can use a boolean filter instead of report-time text search over address fields. The flag is not applied in the notebook and does not remove rows from the reporting tables.
 - `Vacancy ID` is formatted as `property_id_dd/MM/yy`.
 - The solution also publishes an exception table for known invalid source patterns such as tenancy intervals overlapping void intervals for the same property.
 - Tenancy rows with current stage `Allocation Cancelled` are kept in the tenancy audit output for traceability, but are excluded from vacancy construction and exception generation.

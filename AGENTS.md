@@ -14,11 +14,11 @@ Before changing anything, read these files in this order:
 
 If the task is about date corrections or source timing issues, also read:
 
-- `vacancy_rule_parameter_maintenance_notebook.py`
+- `notebooks/vac_reporting_vic_parameter_maintenance_notebook.py`
 
 If the task is about notebook logic, use:
 
-- `vacancy_reporting_vic_notebook.py`
+- `notebooks/vac_reporting_vic_gold_notebook.py`
 
 ## Source Of Truth
 
@@ -26,7 +26,7 @@ Use this priority order when requirements conflict:
 
 1. Explicit user instruction in the current conversation
 2. Confirmed workbook logic from `Vacant Calc.xlsx`
-3. Current implementation in `vacancy_reporting_vic_notebook.py`
+3. Current implementation in `notebooks/vac_reporting_vic_gold_notebook.py`
 4. Documentation in `docs/`
 5. Older notes or prose that are not backed by data logic
 

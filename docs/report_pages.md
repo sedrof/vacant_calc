@@ -36,6 +36,9 @@ Use these measures:
 - `[Untenantable Days]`
 - `[Other Days]`
 - `[Average Vacancy Days]`
+- `[Avg Tenantable Days]`
+- `[Avg Untenantable Days]`
+- `[Avg Other Days]`
 - `[Vacancies LE 21 Days]`
 - `[Vacancies GT 21 Days]`
 - `[Vacancies LE 48 Days]`
@@ -135,6 +138,14 @@ Trace page note:
 - use a dedicated searchable property selector on the `Property Trace` page instead.
 - do not sync the global date slicer to the `Exception Monitor` page either.
 
+### Standard address filter
+
+For pages that need to exclude non-standard address records, use a visual, page, or report-level filter:
+
+- `dim_property_vic[is_standard_address]` = `True`
+
+Do not use DAX text-search filters such as `SEARCH`, `FIND`, or `CONTAINSSTRING` against address fields at report runtime.
+
 ## Page 1: Summary
 
 Purpose:
@@ -143,75 +154,61 @@ Purpose:
 - support annual benchmark review,
 - support ad hoc operational review.
 
-### KPI card 1
+### Visual 1: Summary KPI Card Container
 
 Visual type:
 
-- `Card`
+- `Card (new)` (The New Card Visual)
 
-Field well:
+Field well (Metrics to load):
 
 - `Data` = `[Vacancy Count]`
-
-### KPI card 2
-
-Visual type:
-
-- `Card`
-
-Field well:
-
 - `Data` = `[Vacancy Days]`
-
-### KPI card 3
-
-Visual type:
-
-- `Card`
-
-Field well:
-
 - `Data` = `[Tenantable Days]`
-
-### KPI card 4
-
-Visual type:
-
-- `Card`
-
-Field well:
-
 - `Data` = `[Untenantable Days]`
-
-### KPI card 5
-
-Visual type:
-
-- `Card`
-
-Field well:
-
 - `Data` = `[Pct LE 21 Days]`
-
-Formatting:
-
-- display units = `None`
-- show as percentage
-
-### KPI card 6
-
-Visual type:
-
-- `Card`
-
-Field well:
-
 - `Data` = `[Pct LE 48 Days]`
 
-Formatting:
+Step-by-Step Visual Formatting:
 
-- display units = `None`
-- show as percentage
+#### 1. Visual Container (General $\rightarrow$ Effects $\rightarrow$ Background)
+* **Background:** Toggle to **On**.
+  * **Color:** Set to a soft slate/navy (e.g., `#1E293B` for dark mode or `#F8FAFC` for light mode).
+  * **Transparency:** Set to **`70%–80%`** to create a translucent glassmorphic look over report page gradients.
+* **Visual Border:** Toggle to **On**.
+  * **Color:** Muted slate (e.g., `#334155`).
+  * **Corners:** Round to **`12px`** or **`16px`** for a sleek, modern visual container.
+
+#### 2. Individual Card backgrounds (Visual $\rightarrow$ Cards $\rightarrow$ Fill / Accent Bar)
+By default, Power BI fills each card tile with a **solid white background**. To eliminate this white background and replicate the mockup design, you must choose **one** of these two styling options:
+
+* **Option A: Pure Transparent Glassmorphism (Recommended - No individual tiles):**
+  * **Visual $\rightarrow$ Cards $\rightarrow$ Fill:** Toggle this setting to **`OFF`** (or set **Transparency** to **`100%`**). This completely removes the white blocks, letting your outer glassmorphic container background show through beautifully.
+  * **Visual $\rightarrow$ Cards $\rightarrow$ Border:** Toggle to **`OFF`**.
+* **Option B: Layered Slate Tiles (For solid dark nested tiles):**
+  * **Visual $\rightarrow$ Cards $\rightarrow$ Fill:** Toggle to **`ON`**.
+    * **Color:** Set to a conformed dark slate color (e.g., Hex `#11161D` or `#0F1216` in dark mode; Hex `#F1F5F9` in light mode). **Do NOT leave it as default `#FFFFFF` white.**
+    * **Transparency:** Set to **`0%`** (fully solid).
+  * **Visual $\rightarrow$ Cards $\rightarrow$ Border:** Toggle to **`ON`**. Set Color to Hex `#222D37` and Width to `1 px`.
+* **Shape settings (Visual $\rightarrow$ Shape):**
+  * **Type:** Select **`Rounded Rectangle`**.
+  * **Corner Radius:** Set to **`8px`** or **`10px`** to follow the rounded theme of the outer container.
+* **Card Padding (Visual $\rightarrow$ Cards $\rightarrow$ Padding):**
+  * **Type:** Select **`Custom`**.
+  * **Value:** Set spacing to **`12px`** or **`16px`** to ensure the numbers and text have professional breathing room.
+
+#### 3. Callout Value and Labels (Visual $\rightarrow$ Callout values)
+* **Callout Values:**
+  * **Font:** Set to **`Segoe UI Semibold`** or **`Inter`**.
+  * **Color:** High-contrast white (`#FFFFFF`) or dark slate (`#0F172A`) depending on theme.
+  * **Display Units:** Set to **`None`**.
+  * **Format:** Set percentages (`Pct LE 21 Days`, `Pct LE 48 Days`) to format as percentages (`%`).
+* **Card Labels (Label Text):**
+  * **Color:** Muted slate grey (e.g., `#94A3B8`) to draw secondary attention.
+  * **Position:** Set position to **`Below Value`** for clean vertical metric alignment.
+* **Card Layout:**
+  * **Orientation:** Set layout to **`Horizontal`**.
+  * **Card Spacing:** Set card space to **`12px`** (horizontal gap between metric tiles).
 
 ### Visual 1: Average Vacancy Days by Entity
 
@@ -274,7 +271,298 @@ Purpose:
 - support operational follow-up,
 - support regulator-ready extracts.
 
-### Visual 1: Vacancy detail table
+### Layout Hierarchy
+
+The page is built with a high-density, professional vertical layout hierarchy:
+1. **Top Row:** Synced Filters/Slicers (Entity, Ownership, CAH Program, Property Source, Date Slicer).
+2. **Second Row:** 5 Glowing Glassmorphic KPI Cards with Reference Labels and modern outline icons.
+3. **Third Row (Split Screen):**
+   * **Left Side (40% width):** Clustered column chart showing **Vacancy Duration Distribution**.
+   * **Right Side (60% width):** High-density conformed **Vacancy Detail Table** (reduced in column width, optimized for quick export).
+
+---
+
+### Step-by-Step Styling & Formatting Guide (To Replicate the Premium Mockup)
+
+To achieve the premium, modern SaaS-like aesthetics displayed in the high-fidelity [vacancy_detail_mockup.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/vacancy_detail_mockup.png), configure your Power BI visual elements exactly as follows:
+
+#### 1. Page Background & Wallpaper
+
+To replicate the premium, modern SaaS-like aesthetics seen in advanced visual dashboards, you can choose between two main styling approaches:
+
+* **Approach A: Unified Canvas Grid Background (Recommended - The YouTube Technique)**
+  Instead of configuring backgrounds, borders, and shadows on every visual individually (which can render slowly and frequently drift out of alignment), you apply a single, high-fidelity widescreen grid background to the entire page canvas. 
+  
+  We have pre-designed and generated a premium conformed background asset for you at [dashboard_grid_bg.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/dashboard_grid_bg.png). It contains the title header space, 5 pre-aligned glassmorphic KPI card slots with glowing accent strokes, and lower layout plates for your chart and table.
+  
+  **How to apply Approach A in Power BI:**
+  1. Open the **Format Page** pane (the paintbrush icon with no visuals selected).
+  2. Expand **Canvas background**:
+     * **Image:** Click **Browse** and select [dashboard_grid_bg.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/dashboard_grid_bg.png).
+     * **Image Fit:** Change from *Normal* to **`Fit`** (this is critical to prevent cropping or tiling).
+     * **Transparency:** Drag the slider from `100%` down to **`0%`** to make the grid visible.
+  3. Expand **Wallpaper**:
+     * **Color:** Set to Hex **`#0F1216`** (Deep slate gray) to match the outer padding.
+  4. Expand **Canvas settings**:
+     * **Type:** Select **`16:9`** Widescreen.
+     * **Canvas Margins:** Set to **`16 px`** on all sides.
+  5. **Visual Layer Overlays:**
+     * Drag and place your metrics, column chart, and detail table over their designated pre-rendered slot containers.
+     * Select each visual, navigate to **Format Visual $\rightarrow$ General $\rightarrow$ Effects**, and toggle **`Background = OFF`**, **`Visual Border = OFF`**, and **`Shadow = OFF`**. This lets the pre-rendered glowing glassmorphism of the background show through perfectly!
+
+* **Approach B: Native Glassmorphism Containers (No External Assets)**
+  Use this if you prefer using native Power BI shapes and formatting instead of static images.
+  1. Set **Canvas Background** to Hex **`#0F1216`**, Transparency = `0%`.
+  2. Apply the settings in the *Glassmorphic Card Containers* section below to each visual container individually.
+
+* **Approach C: DIY PowerPoint Shape Backgrounds (The Custom YouTube Method)**
+  If you want to design your own custom card shapes or layout grids using Microsoft PowerPoint:
+  1. **Slide Setup:** Open PowerPoint $\rightarrow$ Go to **Design** tab $\rightarrow$ **Slide Size** $\rightarrow$ **Custom Slide Size**. Set it to a widescreen 16:9 format (`Width: 13.33 inches` or `33.867 cm`, `Height: 7.5 inches` or `19.05 cm`).
+  2. **Slide Background:** Right-click the slide background $\rightarrow$ **Format Background** $\rightarrow$ **Solid Fill** $\rightarrow$ Color Hex **`#0F1216`**.
+  3. **Draw Card Container:** Insert $\rightarrow$ Shapes $\rightarrow$ **Rounded Rectangle**. Draw a card shape on the slide.
+  4. **Shape Formatting:**
+     * **Shape Fill:** Select **Solid Fill** $\rightarrow$ Color Hex **`#171E26`** (Dark slate) with an optional `10%` transparency.
+     * **Shape Outline/Border:** Select **Solid Line** $\rightarrow$ Color Hex **`#222D37`** (Subtle slate border) or a glowing accent color (Teal `#319795` or Green `#48BB78`), Width = **`1 pt`** or **`1.5 pt`**.
+     * **Drop Shadow:** Go to **Shape Effects** $\rightarrow$ **Shadow** $\rightarrow$ **Shadow Options...**:
+       * *Color:* Black (`#000000`)
+       * *Transparency:* `75%`
+       * *Size:* `102%`
+       * *Blur:* `12 pt`
+       * *Angle:* `90°`
+       * *Distance:* `3 pt`
+  5. **Exporting Assets:**
+     * *To export the whole grid:* Go to **File $\rightarrow$ Save As $\rightarrow$ PNG**. Choose "Just This One".
+     * *To export an individual card:* Right-click the shape you drew $\rightarrow$ **Save as Picture...** $\rightarrow$ Choose **PNG**.
+  6. **Importing into Power BI:** Upload the individual card image as a fill for your cards (**Visual $\rightarrow$ Cards $\rightarrow$ Fill $\rightarrow$ Image**). Set Fit to **`Fit`** and Transparency to **`0%`**.
+
+#### 2. Glassmorphic Card Containers (Applies to all visual backgrounds when not using Approach A)
+For each KPI Card (the New Card visual container), the Column Chart, and the Table container, configure the **Visual Container Formatting** (located under the **`General`** tab $\rightarrow$ **`Effects`** section of the Format Pane):
+* **Background (General $\rightarrow$ Effects $\rightarrow$ Background):** Toggle to **On**, Color = Hex `#171E26` (Dark slate gray), Transparency = `30%` (delivers the frosted glassmorphism effect).
+* **Visual Border (General $\rightarrow$ Effects $\rightarrow$ Visual Border):** Toggle to **On**, Style = Solid, Width = `1 px`, Color = Hex `#222D37` (Subtle conformed edge stroke).
+  * **Rounded Corners:** Toggle to **On**, Corner Radius = `8 px` (Sleek SaaS border radius).
+* **Shadow (General $\rightarrow$ Effects $\rightarrow$ Shadow):** Toggle to **On**, Color = Hex `#000000`, Opacity = `80%`, Size = `10 px`, Angle = `90°`, Distance = `2 px`, Position = `Outer` (creates depth).
+
+#### 3. Power BI "New Card" Visual - Callout Values & Reference Labels
+Create a single conformed "New Card" visual containing all 5 metrics, or 5 individual card visuals aligned horizontally:
+
+##### Callout Values (Primary Metrics)
+* **Font Family:** `Outfit` or `Inter` (or clean sans-serif equivalent).
+* **Font Size:** `45 pt`, Bold, Color = Hex `#FFFFFF` (Pure white).
+* **Horizontal Alignment:** Left.
+* **Display Units:** None.
+
+##### Reference Labels (Secondary Context Metrics)
+For each card series, navigate to **Format pane > Reference labels** and add/configure:
+* **Font Family:** `Outfit` or `Inter`, Size = `10 pt`.
+* **Label Colors:** Hex `#718096` (Slate gray).
+* **Card 1 (Vacancy Count):**
+  * *Open Vacancies* Value: Hex `#319795` (Teal).
+  * *Closed Vacancies* Value: Hex `#718096` (Gray).
+* **Card 2 (Vacancy Days):**
+  * *Tenantable %* Value: Hex `#48BB78` (Green).
+  * *Untenantable %* Value: Hex `#ED8936` (Orange).
+  * *Other %* Value: Hex `#718096` (Gray).
+* **Card 3 (Average Duration):**
+  * *Avg Tenantable* Value: Hex `#319795` (Teal).
+  * *Avg Untenantable* Value: Hex `#ED8936` (Orange).
+  * *Avg Other* Value: Hex `#718096` (Gray).
+  * *VS. Target (21d)* Value: Apply **Conditional Formatting** based on `[Avg Vacancy Variance to 21d]`. Rule: If value > 0, Hex `#F56565` (Red - over target); if value <= 0, Hex `#48BB78` (Green - under target).
+* **Card 4 (21-Day Benchmark):**
+  * *Volume* Value: Hex `#718096` (Gray).
+  * *VS. Target (80%)* Value: Apply **Conditional Formatting** based on `[Benchmark 21d Variance]`. Rule: If value >= 0, Hex `#48BB78` (Green); if value < 0, Hex `#F56565` (Red).
+* **Card 5 (48-Day Benchmark):**
+  * *Volume* Value: Hex `#718096` (Gray).
+  * *VS. Target (95%)* Value: Apply **Conditional Formatting** based on `[Benchmark 48d Variance]`. Rule: If value >= 0, Hex `#48BB78` (Green); if value < 0, Hex `#F56565` (Red).
+
+##### Custom Outline Icon Integration
+For each card, navigate to **Format pane > Cards > Image** and upload the conformed separated PNG icons:
+1. **Vacancy Count Card:** Browse and select [vacancy_count_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/vacancy_count_icon.png)
+2. **Vacancy Days Card:** Browse and select [vacancy_days_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/vacancy_days_icon.png)
+3. **Average Duration Card:** Browse and select [tenantable_days_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/tenantable_days_icon.png)
+4. **21-Day Card:** Browse and select [untenantable_days_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/untenantable_days_icon.png)
+5. **48-Day Card:** Browse and select [benchmark_achievement_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/benchmark_achievement_icon.png)
+* **Image settings for all cards:**
+  * **Position:** Right.
+  * **Fit:** Fit.
+  * **Size:** `40 px`.
+  * **Padding:** `10 px`.
+  * **Transparency:** `0%`.
+
+#### 4. Clustered Column Chart (Vacancy Duration Distribution)
+* **X-axis & Y-axis Labels:** Font = `Outfit`/`Inter`, Size = `9 pt`, Color = Hex `#A0AEC0` (Conformed gray).
+* **Gridlines:** Turn both Horizontal and Vertical Gridlines **Off** to preserve the premium slate background.
+* **Column Colors:** Turn **Show All** to **On** under **Format > Columns > Colors** and color-code each category exactly to represent the visual gradient:
+  * `0-7 Days`: Hex `#1E3A8A` (Deep navy blue)
+  * `8-14 Days`: Hex `#0D9488` (Teal)
+  * `15-21 Days (Target 21)`: Hex `#16A34A` (Light green)
+  * `22-35 Days`: Hex `#D97706` (Amber/Yellow)
+  * `36-48 Days (Target 48)`: Hex `#EA580C` (Warm coral orange)
+  * `49+ Days`: Hex `#DC2626` (Vibrant red)
+* **Data Labels:** Turn **On**, Color = Hex `#FFFFFF`, Size = `8 pt`, Position = `Auto`.
+* **Chart Title:** Font = `Outfit`/`Inter`, Bold, Size = `12 pt`, Color = Hex `#FFFFFF`.
+
+#### 5. High-Density Conformed Detail Table
+* **Style Preset:** Set to `None` or `Minimal` to allow total conformed overrides.
+* **Values Formatting:** Font = `Outfit`/`Inter`, Size = `9 pt`, Text Color = Hex `#E2E8F0` (Off-white), Alternating row style = Off.
+* **Column Headers:** Font = `Outfit`/`Inter`, Bold, Size = `10 pt`, Font Color = Hex `#FFFFFF` (Pure white), Background Color = Hex `#171E26` (frosted container color).
+* **Grid Formatting:**
+  * **Row Borders:** On, Color = Hex `#222D37` (Edge gray stroke), Thickness = `1 px`.
+  * **Column Borders:** Off (maintains high readability).
+* **Conditional Formatting (Has Exception):**
+  * Navigate to **Conditional formatting > Icons** for `Has Exception`.
+  * Set rules: If value is `1` (positive exception flag), show the **Red Warning Icon**. If value is `0`, show **No Icon** (completely hidden). Use icon-only layout for this column.
+
+---
+
+### KPI Card 1: Vacancy Count
+
+Visual type:
+
+- `Card (New)`
+
+Field well:
+
+- `Primary Value` = `[Vacancy Count]`
+
+Reference Labels (Secondary Metrics):
+
+- `Label 1` = `Open Vacancies`
+  * Value = `[Open Vacancy Count]`
+  * Color = HSL Teal / Green accent
+- `Label 2` = `Closed Vacancies`
+  * Value = `[Closed Vacancy Count]`
+  * Color = Gray
+
+Accent / Icon:
+- Glowing outline checkmark and house icon in the upper right.
+
+---
+
+### KPI Card 2: Vacancy Days
+
+Visual type:
+
+- `Card (New)`
+
+Field well:
+
+- `Primary Value` = `[Vacancy Days]`
+
+Reference Labels (Secondary Metrics):
+
+- `Label 1` = `Tenantable %`
+  * Value = `[Tenantable Days Pct]` (formatted as %)
+  * Color = HSL Green accent
+- `Label 2` = `Untenantable %`
+  * Value = `[Untenantable Days Pct]` (formatted as %)
+  * Color = HSL Orange accent
+- `Label 3` = `Other %`
+  * Value = `[Other Days Pct]` (formatted as %)
+  * Color = Gray
+
+Accent / Icon:
+- Glowing calendar outline and clock icon in the upper right.
+
+---
+
+### KPI Card 3: Average Duration
+
+Visual type:
+
+- `Card (New)`
+
+Field well:
+
+- `Primary Value` = `[Average Vacancy Days]`
+
+Reference Labels (Secondary Metrics):
+
+- `Label 1` = `Avg Tenantable`
+  * Value = `[Avg Tenantable Days]`
+  * Color = HSL Teal accent
+- `Label 2` = `Avg Untenantable`
+  * Value = `[Avg Untenantable Days]`
+  * Color = HSL Orange accent
+- `Label 3` = `Avg Other`
+  * Value = `[Avg Other Days]`
+  * Color = Gray
+- `Label 4` = `VS. Target (21d)`
+  * Value = `[Avg Vacancy Variance to 21d]` (formatted as `+0.0;-0.0`)
+  * Color = Red if positive (above benchmark), Green if negative (below benchmark)
+
+Accent / Icon:
+- Glowing key and shield icon in the upper right.
+
+---
+
+### KPI Card 4: 21-Day Benchmark Achievement
+
+Visual type:
+
+- `Card (New)`
+
+Field well:
+
+- `Primary Value` = `[Pct LE 21 Days]` (formatted as %)
+
+Reference Labels (Secondary Metrics):
+
+- `Label 1` = `Volume`
+  * Value = `[Vacancies LE 21 Days]`
+  * Color = Gray
+- `Label 2` = `VS. Target (80%)`
+  * Value = `[Benchmark 21d Variance]` (formatted as `%`)
+  * Color = Green if positive, Red if negative
+
+Accent / Icon:
+- Glowing gear and maintenance outline icon in the upper right.
+
+---
+
+### KPI Card 5: 48-Day Benchmark Achievement
+
+Visual type:
+
+- `Card (New)`
+
+Field well:
+
+- `Primary Value` = `[Pct LE 48 Days]` (formatted as %)
+
+Reference Labels (Secondary Metrics):
+
+- `Label 1` = `Volume`
+  * Value = `[Vacancies LE 48 Days]`
+  * Color = Gray
+- `Label 2` = `VS. Target (95%)`
+  * Value = `[Benchmark 48d Variance]` (formatted as `%`)
+  * Color = Green if positive, Red if negative
+
+Accent / Icon:
+- Glowing target circle outline icon in the upper right.
+
+---
+
+### Visual 1: Vacancy Duration Distribution Chart
+
+Visual type:
+
+- `Clustered column chart`
+
+Field well:
+
+- `X-axis` = `fact_vacancy_interval_vic[Vacancy Duration Bracket]`
+- `Y-axis` = `[Vacancy Count]`
+- `Tooltips` = `[Vacancy Days]`, `[Average Vacancy Days]`
+
+Sorting and Colors:
+
+- Sort by `fact_vacancy_interval_vic[Vacancy Duration Bracket Sort]` ascending.
+- Column colors: Gradient sequence representing operational severity (0-7 Days: deep blue, 8-14 Days: teal, 15-21 Days: light green, 22-35 Days: yellow/orange, 36-48 Days: coral, 49+ Days: vibrant red).
+
+---
+
+### Visual 2: Vacancy detail table
 
 Visual type:
 
@@ -286,6 +574,7 @@ Field well:
 - `Columns` = `fact_vacancy_interval_vic[property_id]`
 - `Columns` = `dim_property_vic[property_number]`
 - `Columns` = `dim_property_vic[property_short_address]`
+- `Columns` = `dim_property_vic[is_standard_address]`
 - `Columns` = `dim_property_vic[entity]`
 - `Columns` = `dim_property_vic[ownership]`
 - `Columns` = `dim_property_vic[housing_program]`
@@ -344,6 +633,7 @@ Formatting:
 - rename `fact_vacancy_interval_vic[property_id]` display label to `Property ID`
 - rename `dim_property_vic[property_number]` display label to `Property Number`
 - rename `dim_property_vic[property_short_address]` display label to `Property Address`
+- rename `dim_property_vic[is_standard_address]` display label to `Standard Address`
 - rename `dim_property_vic[entity]` display label to `Entity`
 - rename `dim_property_vic[ownership]` display label to `Ownership`
 - rename `dim_property_vic[housing_program]` display label to `Housing Program`
@@ -407,6 +697,7 @@ Recommended final column order for management:
 - `Vacancy ID`
 - `Property Number`
 - `Property Address`
+- `Standard Address`
 - `Entity`
 - `Ownership`
 - `Housing Program`
@@ -645,6 +936,7 @@ Field well:
 - `Columns` = `audit_property_vic[property_id]`
 - `Columns` = `audit_property_vic[property_number]`
 - `Columns` = `audit_property_vic[property_short_address]`
+- `Columns` = `audit_property_vic[is_standard_address]`
 - `Columns` = `audit_property_vic[entity]`
 - `Columns` = `audit_property_vic[ownership]`
 - `Columns` = `audit_property_vic[housing_program]`
@@ -663,6 +955,7 @@ Formatting:
 - rename `audit_property_vic[property_id]` display label to `Property ID`
 - rename `audit_property_vic[property_number]` display label to `Property Number`
 - rename `audit_property_vic[property_short_address]` display label to `Property Address`
+- rename `audit_property_vic[is_standard_address]` display label to `Standard Address`
 - rename `audit_property_vic[entity]` display label to `Entity`
 - rename `audit_property_vic[ownership]` display label to `Ownership`
 - rename `audit_property_vic[housing_program]` display label to `Housing Program`

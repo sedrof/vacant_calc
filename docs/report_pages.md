@@ -42,6 +42,9 @@ Use these measures:
 - `[Avg Tenantable Days When Present]`
 - `[Avg Untenantable Days When Present]`
 - `[Avg Other Days When Present]`
+- `[Vacancies With Tenantable Days]`
+- `[Vacancies With Untenantable Days]`
+- `[Vacancies With Other Days]`
 - `[Vacancies LE 21 Days]`
 - `[Vacancies GT 21 Days]`
 - `[Vacancies LE 48 Days]`
@@ -349,36 +352,30 @@ For each KPI Card (the New Card visual container), the Column Chart, and the Tab
 Create a single conformed "New Card" visual containing all 5 metrics, or 5 individual card visuals aligned horizontally:
 
 ##### Callout Values (Primary Metrics)
-* **Font Family:** `Outfit` or `Inter` (or clean sans-serif equivalent).
-* **Font Size:** `45 pt`, Bold, Color = Hex `#FFFFFF` (Pure white).
+* **Font Family:** `Segoe UI Semibold`, `Inter SemiBold`, or `Aptos Display`.
+* **Font Size:** `24 pt` to `30 pt`, Bold, Color = Hex `#111827`.
 * **Horizontal Alignment:** Left.
 * **Display Units:** None.
 
 ##### Reference Labels (Secondary Context Metrics)
 For each card series, navigate to **Format pane > Reference labels** and add/configure:
-* **Font Family:** `Outfit` or `Inter`, Size = `10 pt`.
-* **Label Colors:** Hex `#718096` (Slate gray).
+* **Font Family:** `Segoe UI`, `Inter`, or `Aptos`, Size = `8.5 pt` to `9.5 pt`.
+* **Label Colors:** Hex `#8A8F98`.
 * **Card 1 (Vacancy Count):**
-  * *Open Vacancies* Value: Hex `#319795` (Teal).
-  * *Closed Vacancies* Value: Hex `#718096` (Gray).
+  * *Has Tenantable* Value: Hex `#15803D` (Green).
+  * *Has Untenantable* Value: Hex `#C2410C` (Orange).
+  * *Has Other* Value: Hex `#6B7280` (Gray).
 * **Card 2 (Vacancy Days):**
-  * *Tenantable %* Value: Hex `#48BB78` (Green).
-  * *Untenantable %* Value: Hex `#ED8936` (Orange).
-  * *Other %* Value: Hex `#718096` (Gray).
-* **Card 3 (Average Duration):**
-  * *Tenantable / All* Value: Hex `#319795` (Teal).
-  * *Tenantable / >0 Only* Value: Hex `#319795` (Teal).
-  * *Untenantable / All* Value: Hex `#ED8936` (Orange).
-  * *Untenantable / >0 Only* Value: Hex `#ED8936` (Orange).
-  * *Other / All* Value: Hex `#718096` (Gray).
-  * *Other / >0 Only* Value: Hex `#718096` (Gray).
-  * *VS. Target (21d)* Value: Apply **Conditional Formatting** based on `[Avg Vacancy Variance to 21d]`. Rule: If value > 0, Hex `#F56565` (Red - over target); if value <= 0, Hex `#48BB78` (Green - under target).
-* **Card 4 (21-Day Benchmark):**
-  * *Volume* Value: Hex `#718096` (Gray).
-  * *VS. Target (80%)* Value: Apply **Conditional Formatting** based on `[Benchmark 21d Variance]`. Rule: If value >= 0, Hex `#48BB78` (Green); if value < 0, Hex `#F56565` (Red).
-* **Card 5 (48-Day Benchmark):**
-  * *Volume* Value: Hex `#718096` (Gray).
-  * *VS. Target (95%)* Value: Apply **Conditional Formatting** based on `[Benchmark 48d Variance]`. Rule: If value >= 0, Hex `#48BB78` (Green); if value < 0, Hex `#F56565` (Red).
+  * *Avg (All)* Value: Hex `#2563EB` (Blue).
+* **Card 3 (Tenantable Days):**
+  * *Avg (All)* Value: Hex `#15803D` (Green).
+  * *Avg (>0 Only)* Value: Hex `#15803D` (Green).
+* **Card 4 (Untenantable Days):**
+  * *Avg (All)* Value: Hex `#C2410C` (Orange).
+  * *Avg (>0 Only)* Value: Hex `#C2410C` (Orange).
+* **Card 5 (Other Days):**
+  * *Avg (All)* Value: Hex `#6B7280` (Gray).
+  * *Avg (>0 Only)* Value: Hex `#6B7280` (Gray).
 
 ##### Light Theme KPI Card Styling
 Use this styling when the Vacancy Detail page uses the clean white-card layout instead of the dark glassmorphic background.
@@ -429,9 +426,9 @@ Color the reference values, not the full label text. This keeps the cards readab
 For each card, navigate to **Format pane > Cards > Image** and upload the conformed separated PNG icons:
 1. **Vacancy Count Card:** Browse and select [vacancy_count_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/vacancy_count_icon.png)
 2. **Vacancy Days Card:** Browse and select [vacancy_days_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/vacancy_days_icon.png)
-3. **Average Duration Card:** Browse and select [tenantable_days_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/tenantable_days_icon.png)
-4. **21-Day Card:** Browse and select [untenantable_days_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/untenantable_days_icon.png)
-5. **48-Day Card:** Browse and select [benchmark_achievement_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/benchmark_achievement_icon.png)
+3. **Tenantable Days Card:** Browse and select [tenantable_days_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/tenantable_days_icon.png)
+4. **Untenantable Days Card:** Browse and select [untenantable_days_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/untenantable_days_icon.png)
+5. **Other Days Card:** Use [benchmark_achievement_icon.png](file:///Users/abdulla/Documents/vacant_calc/docs/assets/benchmark_achievement_icon.png) only if you need an icon; otherwise leave this card without an icon to keep the row visually quiet.
 * **Image settings for all cards:**
   * **Position:** Right.
   * **Fit:** Fit.
@@ -477,12 +474,15 @@ Field well:
 
 Reference Labels (Secondary Metrics):
 
-- `Label 1` = `Open Vacancies`
-  * Value = `[Open Vacancy Count]`
-  * Color = HSL Teal / Green accent
-- `Label 2` = `Closed Vacancies`
-  * Value = `[Closed Vacancy Count]`
-  * Color = Gray
+- `Label 1` = `Has Tenantable`
+  * Value = `[Vacancies With Tenantable Days]`
+  * Value color = `#15803D`
+- `Label 2` = `Has Untenantable`
+  * Value = `[Vacancies With Untenantable Days]`
+  * Value color = `#C2410C`
+- `Label 3` = `Has Other`
+  * Value = `[Vacancies With Other Days]`
+  * Value color = `#6B7280`
 
 Accent / Icon:
 - Glowing outline checkmark and house icon in the upper right.
@@ -501,22 +501,16 @@ Field well:
 
 Reference Labels (Secondary Metrics):
 
-- `Label 1` = `Tenantable %`
-  * Value = `[Tenantable Days Pct]` (formatted as %)
-  * Color = HSL Green accent
-- `Label 2` = `Untenantable %`
-  * Value = `[Untenantable Days Pct]` (formatted as %)
-  * Color = HSL Orange accent
-- `Label 3` = `Other %`
-  * Value = `[Other Days Pct]` (formatted as %)
-  * Color = Gray
+- `Label 1` = `Avg (All)`
+  * Value = `[Average Vacancy Days]`
+  * Value color = `#2563EB`
 
 Accent / Icon:
 - Glowing calendar outline and clock icon in the upper right.
 
 ---
 
-### KPI Card 3: Average Duration
+### KPI Card 3: Tenantable Days
 
 Visual type:
 
@@ -524,31 +518,16 @@ Visual type:
 
 Field well:
 
-- `Primary Value` = `[Average Vacancy Days]`
+- `Primary Value` = `[Tenantable Days]`
 
 Reference Labels (Secondary Metrics):
 
-- `Label 1` = `Tenantable / All`
+- `Label 1` = `Avg (All)`
   * Value = `[Avg Tenantable Days]`
-  * Color = HSL Teal accent
-- `Label 2` = `Tenantable / >0 Only`
+  * Value color = `#15803D`
+- `Label 2` = `Avg (>0 Only)`
   * Value = `[Avg Tenantable Days When Present]`
-  * Color = HSL Teal accent
-- `Label 3` = `Untenantable / All`
-  * Value = `[Avg Untenantable Days]`
-  * Color = HSL Orange accent
-- `Label 4` = `Untenantable / >0 Only`
-  * Value = `[Avg Untenantable Days When Present]`
-  * Color = HSL Orange accent
-- `Label 5` = `Other / All`
-  * Value = `[Avg Other Days]`
-  * Color = Gray
-- `Label 6` = `Other / >0 Only`
-  * Value = `[Avg Other Days When Present]`
-  * Color = Gray
-- `Label 7` = `VS. Target (21d)`
-  * Value = `[Avg Vacancy Variance to 21d]` (formatted as `+0.0;-0.0`)
-  * Color = Red if positive (above benchmark), Green if negative (below benchmark)
+  * Value color = `#15803D`
 
 Accent / Icon:
 - Glowing key and shield icon in the upper right.
@@ -562,7 +541,7 @@ Tooltip / explanation:
 
 ---
 
-### KPI Card 4: 21-Day Benchmark Achievement
+### KPI Card 4: Untenantable Days
 
 Visual type:
 
@@ -570,23 +549,23 @@ Visual type:
 
 Field well:
 
-- `Primary Value` = `[Pct LE 21 Days]` (formatted as %)
+- `Primary Value` = `[Untenantable Days]`
 
 Reference Labels (Secondary Metrics):
 
-- `Label 1` = `Volume`
-  * Value = `[Vacancies LE 21 Days]`
-  * Color = Gray
-- `Label 2` = `VS. Target (80%)`
-  * Value = `[Benchmark 21d Variance]` (formatted as `%`)
-  * Color = Green if positive, Red if negative
+- `Label 1` = `Avg (All)`
+  * Value = `[Avg Untenantable Days]`
+  * Value color = `#C2410C`
+- `Label 2` = `Avg (>0 Only)`
+  * Value = `[Avg Untenantable Days When Present]`
+  * Value color = `#C2410C`
 
 Accent / Icon:
 - Glowing gear and maintenance outline icon in the upper right.
 
 ---
 
-### KPI Card 5: 48-Day Benchmark Achievement
+### KPI Card 5: Other Days
 
 Visual type:
 
@@ -594,16 +573,16 @@ Visual type:
 
 Field well:
 
-- `Primary Value` = `[Pct LE 48 Days]` (formatted as %)
+- `Primary Value` = `[Other Days]`
 
 Reference Labels (Secondary Metrics):
 
-- `Label 1` = `Volume`
-  * Value = `[Vacancies LE 48 Days]`
-  * Color = Gray
-- `Label 2` = `VS. Target (95%)`
-  * Value = `[Benchmark 48d Variance]` (formatted as `%`)
-  * Color = Green if positive, Red if negative
+- `Label 1` = `Avg (All)`
+  * Value = `[Avg Other Days]`
+  * Value color = `#6B7280`
+- `Label 2` = `Avg (>0 Only)`
+  * Value = `[Avg Other Days When Present]`
+  * Value color = `#6B7280`
 
 Accent / Icon:
 - Glowing target circle outline icon in the upper right.

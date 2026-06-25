@@ -322,6 +322,38 @@ CALCULATE(
 )
 ```
 
+For the Vacancy Detail page KPI card, use day-type composition counts instead of an average vacancy count:
+
+```DAX
+Vacancies With Tenantable Days =
+COUNTROWS (
+    FILTER (
+        VALUES ( fact_vacancy_interval_vic[vacancy_id] ),
+        CALCULATE ( [Tenantable Days] ) > 0
+    )
+)
+```
+
+```DAX
+Vacancies With Untenantable Days =
+COUNTROWS (
+    FILTER (
+        VALUES ( fact_vacancy_interval_vic[vacancy_id] ),
+        CALCULATE ( [Untenantable Days] ) > 0
+    )
+)
+```
+
+```DAX
+Vacancies With Other Days =
+COUNTROWS (
+    FILTER (
+        VALUES ( fact_vacancy_interval_vic[vacancy_id] ),
+        CALCULATE ( [Other Days] ) > 0
+    )
+)
+```
+
 ### Card 2: Vacancy Days Reference Labels
 ```DAX
 Tenantable Days Pct = 

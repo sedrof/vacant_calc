@@ -1068,7 +1068,20 @@ audit_keys_vic = (
     )
 )
 
+report_refresh_metadata = spark.range(1).select(
+    F.lit(TARGET_STATE).alias("report_state"),
+    F.lit("TechOne").alias("source_system"),
+    F.current_timestamp().alias("gold_processed_datetime"),
+    F.current_date().alias("gold_processed_date"),
+    F.to_date(F.lit(AS_AT_DATE)).alias("as_at_date_parameter"),
+    F.lit(silver_properties.count()).alias("silver_property_row_count"),
+    F.lit(silver_tenancies.count()).alias("silver_tenancy_row_count"),
+    F.lit(silver_voids.count()).alias("silver_void_row_count"),
+    F.lit(silver_keys.count()).alias("silver_keys_row_count"),
+)
+
 # Step 10: Persist all conformed Gold and audit tables
+write_delta(report_refresh_metadata, "report_refresh_metadata")
 write_delta(vacancy_day_fact, "fact_vacancy_day_vic")
 write_delta(fact_vacancy_interval_vic, "fact_vacancy_interval_vic")
 write_delta(keys_staged_vic, "stg_keys_vic")

@@ -147,6 +147,7 @@ The database tables persisted in Fabric are:
 - `vacancy_reporting.fact_vacancy_day_vic`
 - `vacancy_reporting.fact_vacancy_interval_vic`
 - `vacancy_reporting.stg_keys_vic`
+- `vacancy_reporting.report_refresh_metadata`
 
 ### Gold Layer (Diagnostic & Audits)
 - `vacancy_reporting.audit_property_vic`
@@ -170,6 +171,7 @@ These decisions are intentional and should not be changed without evidence:
 - Tenancy rows with current stage `Allocation Cancelled` are kept in the tenancy audit output for traceability, but are excluded from vacancy construction and exception generation.
 - `Other Days` are derived from the Void table's other vacancy date range where it overlaps a vacancy.
 - `Property Program` is currently used as `Property Source`.
+- The Gold notebook publishes `report_refresh_metadata` so report pages can display the date the source data was last processed by the notebook.
 
 ## Delivery Sequence
 

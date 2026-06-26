@@ -27,6 +27,7 @@ Use these model objects:
 - table `audit_void_vic`
 - table `audit_keys_vic`
 - table `audit_exceptions_vic`
+- table `report_refresh_metadata`
 
 Use these measures:
 
@@ -52,6 +53,8 @@ Use these measures:
 - `[Pct LE 21 Days]`
 - `[Pct LE 48 Days]`
 - `[Exception Count]`
+- `[Last Refresh Date]`
+- `[Selected Date Filter]`
 
 ## Global Slicers
 
@@ -151,6 +154,32 @@ For pages that need to exclude non-standard address records, use a visual, page,
 - `dim_property_vic[is_standard_address]` = `True`
 
 Do not use DAX text-search filters such as `SEARCH`, `FIND`, or `CONTAINSSTRING` against address fields at report runtime.
+
+## Report Metadata Labels
+
+Add two small card visuals or text-backed card visuals near the top-right of each main report page, close to the slicer area:
+
+- `Last update` = `[Last Refresh Date]`
+- `Selected dates` = `[Selected Date Filter]`
+
+Formatting:
+
+- visual type = `Card (new)` or compact card
+- category label = On
+- callout value = `9 pt` to `10 pt`
+- label = `8 pt` to `9 pt`
+- label color = `#6B7280`
+- value color = `#111827`
+- background = Off, or `#FFFFFF` with `0%` to `10%` transparency if placed over a busy area
+- border = Off
+- shadow = Off
+- display units = None
+
+Wording:
+
+- use `Last update` rather than `Last refresh` if the report audience is operational,
+- use `Selected dates` for the slicer range,
+- both measures are date-only display text and should not include time.
 
 ## Page 1: Summary
 

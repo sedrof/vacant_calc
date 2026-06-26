@@ -25,6 +25,7 @@ Load these tables from Fabric:
 - `vacancy_reporting.audit_void_vic`
 - `vacancy_reporting.audit_keys_vic`
 - `vacancy_reporting.audit_exceptions_vic`
+- `vacancy_reporting.report_refresh_metadata`
 
 ## Recommended Relationships
 
@@ -88,6 +89,59 @@ Recommended semantic model settings:
 - mark `dim_date[date]` as the date column if your modeling tool supports it,
 - use `dim_date[date]` for all report date slicers,
 - keep quarter, month, and year attributes from this shared table instead of recreating them in DAX.
+
+## Report Metadata
+
+Load `vacancy_reporting.report_refresh_metadata` into the semantic model so report users can see when the Gold notebook last processed the source data.
+
+Do not create this as a DAX calculated table. The table is written by `../notebooks/vac_reporting_vic_gold_notebook.py` and should refresh together with the rest of the Gold output.
+
+The table contains:
+
+- `report_state`
+- `source_system`
+- `gold_processed_datetime`
+- `gold_processed_date`
+- `as_at_date_parameter`
+- `silver_property_row_count`
+- `silver_tenancy_row_count`
+- `silver_void_row_count`
+- `silver_keys_row_count`
+
+Use this display measure for report pages:
+
+```DAX
+Last Refresh Date =
+FORMAT (
+    MAX ( report_refresh_metadata[gold_processed_datetime] ),
+    "dd/MM/yyyy"
+)
+```
+
+Use this display measure to show the selected report date filter:
+
+```DAX
+Selected Date Filter =
+VAR SelectedDates =
+    ALLSELECTED ( dim_date[date] )
+VAR FromDate =
+    MINX ( SelectedDates, dim_date[date] )
+VAR ToDate =
+    MAXX ( SelectedDates, dim_date[date] )
+RETURN
+    IF (
+        ISBLANK ( FromDate ) || ISBLANK ( ToDate ),
+        "No date selected",
+        IF (
+            FromDate = ToDate,
+            FORMAT ( FromDate, "dd/MM/yyyy" ),
+            FORMAT ( FromDate, "dd/MM/yyyy" ) & " - "
+                & FORMAT ( ToDate, "dd/MM/yyyy" )
+        )
+    )
+```
+
+These measures return text so the report shows dates only, without time.
 
 ## Core Measures
 

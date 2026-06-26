@@ -81,6 +81,7 @@ To process data and build the analytical model, execute the notebooks in sequenc
      * `vacancy_reporting.fact_vacancy_day_vic`
      * `vacancy_reporting.fact_vacancy_interval_vic`
      * `vacancy_reporting.stg_keys_vic`
+     * `vacancy_reporting.report_refresh_metadata`
      * `vacancy_reporting.audit_property_vic`
      * `vacancy_reporting.audit_tenancy_vic`
      * `vacancy_reporting.audit_void_vic`
@@ -104,6 +105,12 @@ The exception table is also separate:
 
 - `audit_exceptions_vic` contains source/data-quality issues that should not occur under normal business logic,
 - the first implemented rule flags any tenancy interval that overlaps a void interval on the same property.
+
+The report refresh metadata table is intentionally small:
+
+- `report_refresh_metadata` contains one row for the Gold notebook run,
+- `gold_processed_datetime` is the timestamp shown on report pages as the last source-data processing date,
+- row counts from the Silver source tables are included as a lightweight refresh audit.
 
 ## Step 3: Validate The Parameter Table
 
@@ -170,6 +177,7 @@ Before moving to the semantic model, validate the outputs with a small set of ex
 13. Confirm `audit_exceptions_vic` returns expected records for known bad source scenarios and stays empty for clean test properties.
 14. Confirm `Property Type`, `Property Program`, and `Property Current Stage` are populated consistently across `dim_property_vic`, the `audit_*` tables, and `fact_vacancy_interval_vic`.
 15. Confirm `dim_property_vic[is_standard_address]` is available for report filtering and that no row counts change unless the report explicitly filters on it.
+16. Confirm `report_refresh_metadata[gold_processed_datetime]` updates after the Gold notebook reruns.
 
 If any of these checks fail, stop there and fix the notebook before continuing.
 

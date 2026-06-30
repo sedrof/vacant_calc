@@ -112,6 +112,53 @@ The report refresh metadata table is intentionally small:
 - `gold_processed_datetime` is the timestamp shown on report pages as the last source-data processing date,
 - row counts from the Silver source tables are included as a lightweight refresh audit.
 
+## Step 2A: Create The Operational Refresh Pipeline
+
+Create one Fabric Data Factory pipeline for normal source-to-report refreshes.
+
+Recommended pipeline name:
+
+- `pl_vacancy_reporting_vic_refresh`
+
+Pipeline activity order:
+
+1. `Run Bronze Ingestion`
+   - Notebook: `vac_reporting_vic_bronze_notebook`
+   - Purpose: refresh the raw TechOne source snapshots into the Bronze tables.
+2. `Run Silver Standardization`
+   - Notebook: `vac_reporting_vic_silver_notebook`
+   - Dependency: succeeds only after Bronze succeeds.
+   - Purpose: standardize source types and write the Silver tables.
+3. `Run Dimensions`
+   - Notebook: `vac_reporting_vic_dimensions_notebook`
+   - Dependency: succeeds only after Silver succeeds.
+   - Purpose: refresh `dim_property_vic` and replicate `dim_date`.
+4. `Run Gold Facts And Audits`
+   - Notebook: `vac_reporting_vic_gold_notebook`
+   - Dependency: succeeds only after Dimensions succeeds.
+   - Purpose: rebuild facts, audits, active-rule display, and `report_refresh_metadata`.
+5. `Refresh Semantic Model`
+   - Activity type: Web activity, Power BI/Fabric REST call, or another approved orchestration action available in the tenant.
+   - Dependency: succeeds only after Gold succeeds.
+   - Purpose: refresh the Power BI semantic model after the lakehouse or warehouse tables have been rebuilt.
+
+Do not include `vac_reporting_vic_parameter_maintenance_notebook` in the normal refresh pipeline. Rule changes should be a controlled maintenance action. After a rule change, run the operational refresh pipeline so the new active parameters are applied.
+
+Pipeline configuration:
+
+- run notebooks using a workspace identity or managed service identity where available,
+- give the identity only the Fabric workspace permissions required to execute notebooks, write the target tables, and refresh the semantic model,
+- keep failure behavior strict: if any upstream activity fails, do not refresh the semantic model,
+- enable run history and alerts so failed refreshes are visible to the report owner or support mailbox,
+- schedule the pipeline if the report needs regular source refreshes even when users do not press the report button.
+
+For a report-triggered refresh, expose only a controlled trigger:
+
+- Preferred path: Power BI `Power Automate` visual -> instant cloud flow -> secure HTTP/API action that starts the Fabric pipeline -> optional semantic model refresh/status notification.
+- Alternative path: Power BI `Power Automate` visual -> flow calls the Fabric run-on-demand item job API directly, if the tenant permits the required authentication and connector actions.
+
+The report button must not edit rule parameters, write report-side state, or bypass the notebook sequence.
+
 ## Step 3: Validate The Parameter Table
 
 Review the active date-correction rules before building the semantic model.
@@ -216,9 +263,9 @@ The report is operational and regulatory. Keep the layout clear and export-frien
 
 Use this order whenever source data or rule parameters change:
 
-1. Run `../notebooks/vac_reporting_vic_parameter_maintenance_notebook.py` if a parameter change is required.
-2. Run `../notebooks/vac_reporting_vic_gold_notebook.py`.
-3. Refresh the semantic model.
+1. Run `../notebooks/vac_reporting_vic_parameter_maintenance_notebook.py` only if a parameter change is required.
+2. Run the Fabric pipeline `pl_vacancy_reporting_vic_refresh`.
+3. Confirm the pipeline completed Bronze, Silver, Dimensions, Gold, and semantic model refresh successfully.
 4. Validate the report outputs.
 
 For property-trace testing after a notebook change:

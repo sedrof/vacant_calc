@@ -116,6 +116,7 @@ These are not fixed quarter filters. Management can choose any reporting window 
 The implementation uses a robust **Bronze -> Silver -> Gold Medallion architecture** built in Microsoft Fabric:
 
 - **Medallion Notebook Pipeline:** A series of modular Spark notebooks to stage, standardize, and build the presentation tables.
+- A Fabric Data Factory pipeline should orchestrate the notebooks end-to-end for operational refreshes from TechOne source data.
 - An existing shared `dim_date` table for date filtering.
 - A conformed semantic model.
 - A Power BI report with summary, detail, audit, config, property-trace, and exception-monitor views.
@@ -172,6 +173,8 @@ These decisions are intentional and should not be changed without evidence:
 - `Other Days` are derived from the Void table's other vacancy date range where it overlaps a vacancy.
 - `Property Program` is currently used as `Property Source`.
 - The Gold notebook publishes `report_refresh_metadata` so report pages can display the date the source data was last processed by the notebook.
+- Operational refreshes should run through the Fabric pipeline in the order `Bronze -> Silver -> Dimensions -> Gold -> semantic model refresh`.
+- A Power BI report button may trigger that pipeline through Power Automate or a secured service endpoint, but the report must not contain refresh logic or date-correction rules itself.
 
 ## Delivery Sequence
 
@@ -199,4 +202,5 @@ The project is successful when:
 - the date corrections are governed in Fabric,
 - the report is auditable at vacancy-day level,
 - the report supports exportable operational detail,
-- the process can be rerun without manual recalculation.
+- the process can be rerun without manual recalculation,
+- source-to-report refresh can be triggered in a governed way through Fabric orchestration.

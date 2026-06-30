@@ -81,6 +81,40 @@ Behavior:
 - `To Date` removes vacancy day rows after the selected end date
 - this slicer does not automatically force descriptive columns such as `property_start_date` or `void_start_date` to sit inside the selected range
 
+## Refresh Button
+
+Add a controlled refresh button only after the Fabric pipeline has been created and tested.
+
+Visual type:
+
+- `Power Automate`
+
+Recommended label:
+
+- `Refresh source data`
+
+Flow behavior:
+
+1. Triggered from the Power BI report button.
+2. Starts the Fabric pipeline `pl_vacancy_reporting_vic_refresh`.
+3. Lets the pipeline run the notebook sequence `Bronze -> Silver -> Dimensions -> Gold`.
+4. Refreshes the semantic model after Gold completes successfully.
+5. Returns or records run status for support review.
+
+Permissions:
+
+- report users should receive run-only access to the flow,
+- the flow or service identity should hold the Fabric permissions needed to run the pipeline and refresh the semantic model,
+- users should not need edit access to the Fabric workspace just to request a refresh.
+
+Placement:
+
+- put the button near the existing report metadata cards,
+- keep `[Last Refresh Date]` visible beside it so users can see the last completed Gold processing date,
+- do not sync the button behavior to slicer selections because a source refresh is global, not filtered by the current report view.
+
+Do not use the button to change `cfg_vacancy_rule_parameters`. Parameter edits remain a governed Fabric maintenance task, not report-side writeback.
+
 ### Entity slicer
 
 Visual type:

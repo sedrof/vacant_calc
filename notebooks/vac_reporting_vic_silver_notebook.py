@@ -10,6 +10,20 @@ ACTIVE_CONFIG_TABLE = "dim_active_vacancy_rule_parameters"
 BRACKET_MARKER_PATTERN = r"[\[\]\(\)<>]"
 LOCAL_TIMEZONE = "Australia/Melbourne"
 
+# Confirmed TechOne source correction. These rows bootstrap the governed config
+# table on first deployment; subsequent changes remain controlled through
+# cfg_vacancy_rule_parameters.
+DEFAULT_RULE_PARAMETERS = [
+    ("property_source_date_offset", 0, "UTC timestamps are converted to Australia/Melbourne; no additional source-date shift is required."),
+    ("tenancy_source_date_offset", 0, "UTC timestamps are converted to Australia/Melbourne; no additional source-date shift is required."),
+    ("void_source_date_offset", 0, "UTC timestamps are converted to Australia/Melbourne; no additional source-date shift is required."),
+    ("keys_source_date_offset", 0, "UTC timestamps are converted to Australia/Melbourne; no additional source-date shift is required."),
+    ("tenancy_end_to_vacancy_start", 1, "Vacancy starts on the day after the corrected tenancy end date."),
+    ("next_tenancy_start_to_vacancy_end", -1, "Inclusive vacancy end is the day before the corrected next tenancy start date."),
+    ("property_start_to_vacancy_start", 0, "New-property vacancy starts on the corrected property start date."),
+    ("property_end_to_vacancy_end", 1, "Exclusive vacancy end is the day after the corrected property end date."),
+]
+
 def qcol(name: str):
     return F.col(f"`{name}`")
 
@@ -77,29 +91,71 @@ def write_silver_delta(df, table_name: str):
     )
     print(f"Silver table {table_name} written successfully.")
 
+def ensure_rule_parameter_config():
+    config_table_fqn = f"{OUTPUT_DATABASE}.{CONFIG_TABLE}"
+    if spark.catalog.tableExists(config_table_fqn):
+        return
+
+    seed_df = (
+        spark.createDataFrame(
+            DEFAULT_RULE_PARAMETERS,
+            ["rule_name", "offset_days", "comment"],
+        )
+        .withColumn("is_active", F.lit(True))
+        .withColumn("effective_from", F.to_date(F.lit("1900-01-01")))
+        .withColumn("updated_by", F.lit("repository_default"))
+        .withColumn("updated_at", F.current_timestamp())
+        .select(
+            "rule_name",
+            "offset_days",
+            "is_active",
+            "effective_from",
+            "comment",
+            "updated_by",
+            "updated_at",
+        )
+    )
+    write_silver_delta(seed_df, CONFIG_TABLE)
+    print(f"Created governed rule config {config_table_fqn} with confirmed defaults.")
+
+def load_latest_active_rule_parameters():
+    config_df = (
+        spark.table(f"{OUTPUT_DATABASE}.{CONFIG_TABLE}")
+        .withColumn("effective_from", F.to_date("effective_from"))
+        .withColumn("updated_at", F.to_timestamp("updated_at"))
+        .withColumn("is_active", F.col("is_active").cast("boolean"))
+    )
+    rule_window = Window.partitionBy("rule_name").orderBy(
+        F.col("effective_from").desc_nulls_last(),
+        F.col("updated_at").desc_nulls_last(),
+    )
+    return (
+        config_df.filter(F.coalesce(F.col("is_active"), F.lit(True)))
+        .filter(F.col("effective_from").isNull() | (F.col("effective_from") <= F.current_date()))
+        .withColumn("rule_rank", F.row_number().over(rule_window))
+        .filter(F.col("rule_rank") == 1)
+        .drop("rule_rank")
+        .orderBy("rule_name")
+    )
+
 # Ensure target database exists
 spark.sql(f"CREATE DATABASE IF NOT EXISTS {OUTPUT_DATABASE}")
 
-# Step 1: Graceful Degradation of Lookup Parameters
-# Read raw rule parameters and degrade to standard defaults if configuration is missing.
-rule_parameter_map = {
-    "property_source_date_offset": 0,
-    "tenancy_source_date_offset": 0,
-    "void_source_date_offset": 0,
-    "keys_source_date_offset": 0,
-}
+# Step 1: Load the governed parameters before any source date is standardized.
+# Silver owns publication of the active-rule dimension because it is the first
+# layer that consumes the offsets in the operational pipeline.
+ensure_rule_parameter_config()
+active_rule_parameters = load_latest_active_rule_parameters()
 
-try:
-    active_rule_parameters = (
-        spark.table(f"{OUTPUT_DATABASE}.{ACTIVE_CONFIG_TABLE}")
-    )
-    rule_parameter_map = {
-        row["rule_name"]: int(row["offset_days"])
-        for row in active_rule_parameters.select("rule_name", "offset_days").collect()
-    }
-    print("Successfully loaded active rule parameters from Fabric config.")
-except Exception:
-    print("Warning: Active rules table missing or empty. Degrading gracefully to default offsets (0).")
+if not active_rule_parameters.take(1):
+    raise ValueError("No active vacancy rule parameters are effective for the current date.")
+
+write_silver_delta(active_rule_parameters, ACTIVE_CONFIG_TABLE)
+rule_parameter_map = {
+    row["rule_name"]: int(row["offset_days"])
+    for row in active_rule_parameters.select("rule_name", "offset_days").collect()
+}
+print("Successfully loaded and published active rule parameters from Fabric config.")
 
 PROPERTY_SOURCE_DATE_OFFSET_DAYS = rule_parameter_map.get("property_source_date_offset", 0)
 TENANCY_SOURCE_DATE_OFFSET_DAYS = rule_parameter_map.get("tenancy_source_date_offset", 0)
@@ -331,8 +387,14 @@ silver_voids = (
             VOID_SOURCE_DATE_OFFSET_DAYS,
         )
     )
-    .withColumn("parsed_other_start_date_text", parsed_text_date("other_start_date_text"))
-    .withColumn("parsed_other_end_date_text", parsed_text_date("other_end_date_text"))
+    .withColumn(
+        "parsed_other_start_date_text",
+        F.date_add(parsed_text_date("other_start_date_text"), VOID_SOURCE_DATE_OFFSET_DAYS),
+    )
+    .withColumn(
+        "parsed_other_end_date_text",
+        F.date_add(parsed_text_date("other_end_date_text"), VOID_SOURCE_DATE_OFFSET_DAYS),
+    )
     .withColumn(
         "adjusted_other_start_date_from_field",
         F.when(

@@ -59,13 +59,12 @@ This is deliberate. It prevents off-by-one errors and makes daily date slicing r
 
 ## Configurable Date Corrections
 
-The source data may be one day behind the Australian business date because of server timing. That correction is now governed in Fabric through a config table, not hardcoded in the report.
+TechOne date-time values arrive as UTC timestamps and are converted in Silver to `Australia/Melbourne` before their date component is used. Additional source-date shifts remain governed in Fabric through a config table, not hardcoded in the report.
 
-Important clarification:
-
-- the notebook supports raw source date shifts per table,
-- but those shifts only apply if the active config rows are set,
-- they are not automatically enabled unless `cfg_vacancy_rule_parameters` has been updated.
+The confirmed source configuration uses no additional shift: Property, Tenancy,
+Void, and Keys source dates each use `offset_days = 0`. On first deployment the
+Silver notebook seeds these governed defaults if the config table does not yet
+exist. Existing config is preserved and remains the system of record.
 
 The active rules are stored in:
 
@@ -77,12 +76,16 @@ The active values published for reporting are stored in:
 
 This allows controlled changes without editing the report each time a date correction rule changes.
 
-If the confirmed business rule is that all relevant TechOne source dates are one day behind, activate these rules with `offset_days = 1`:
+The confirmed active source rules are:
 
 - `property_source_date_offset`
 - `tenancy_source_date_offset`
 - `void_source_date_offset`
 - `keys_source_date_offset`
+
+Each rule has `offset_days = 0`. For example, the UTC timestamp
+`2026-05-14T14:00:00Z` converts to Melbourne date `2026-05-15` and is published
+to `dim_property_vic` without another calendar-day shift.
 
 The recommended maintenance path is the Fabric notebook script:
 
@@ -124,7 +127,7 @@ The implementation uses a robust **Bronze -> Silver -> Gold Medallion architectu
 The modular data pipeline consists of:
 
 1. **Bronze Ingestion:** [vac_reporting_vic_bronze_notebook.py](file:///Users/abdulla/Documents/vacant_calc/notebooks/vac_reporting_vic_bronze_notebook.py) ingests raw source tables 1:1.
-2. **Silver Standardization:** [vac_reporting_vic_silver_notebook.py](file:///Users/abdulla/Documents/vacant_calc/notebooks/vac_reporting_vic_silver_notebook.py) standardizes types, shifting raw UTC to local timezone (`Australia/Melbourne`), and asserting raw schema completeness.
+2. **Silver Standardization:** [vac_reporting_vic_silver_notebook.py](file:///Users/abdulla/Documents/vacant_calc/notebooks/vac_reporting_vic_silver_notebook.py) loads and publishes the active governed rules, standardizes types, shifts raw UTC to local timezone (`Australia/Melbourne`), applies the configured source-date offsets, and asserts raw schema completeness.
 3. **Dimensions (Gold Dimension):** [vac_reporting_vic_dimensions_notebook.py](file:///Users/abdulla/Documents/vacant_calc/notebooks/vac_reporting_vic_dimensions_notebook.py) constructs the conformed property dimension.
 4. **Gold (Analytical Facts & Audits):** [vac_reporting_vic_gold_notebook.py](file:///Users/abdulla/Documents/vacant_calc/notebooks/vac_reporting_vic_gold_notebook.py) applies the analytical boundary calculations, vacancy explosion, key register selection, and exception audits.
 
@@ -191,7 +194,6 @@ Use this order for implementation:
 
 These items still require business confirmation before expansion:
 
-- Whether any source tables need a permanent raw date shift
 - Whether `Property Program` is definitively the right field for `Property Source`
 
 ## Success Criteria

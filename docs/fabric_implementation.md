@@ -61,7 +61,9 @@ To process data and build the analytical model, execute the notebooks in sequenc
 
 2. **Run the Silver Standardization Notebook (`../notebooks/vac_reporting_vic_silver_notebook.py`):**
    * Paste the Silver code into a Fabric notebook.
-   * Standardizes data types, performs timezone shifting (`Australia/Melbourne`), asserts column completeness (`ensure_columns`), and writes conformed Silver tables:
+   * Creates `cfg_vacancy_rule_parameters` with the confirmed defaults on first deployment only; an existing config table is never replaced by this bootstrap step.
+   * Selects the latest active effective rule for each rule name and publishes `vacancy_reporting.dim_active_vacancy_rule_parameters` before applying source corrections.
+   * Standardizes data types, converts UTC timestamps to `Australia/Melbourne`, applies any configured source-date offsets (confirmed default `0`), asserts column completeness (`ensure_columns`), and writes conformed Silver tables:
      * `vacancy_reporting.silver_techone_property`
      * `vacancy_reporting.silver_techone_tenancy`
      * `vacancy_reporting.silver_techone_void`
@@ -77,7 +79,6 @@ To process data and build the analytical model, execute the notebooks in sequenc
    * Review top parameters (`AS_AT_DATE`).
    * Loads parameters gracefully (with try-except degradation fallback) and applies vacancy calculation boundaries, exploding intervals to daily grains, and generating exception rules.
    * The notebook writes these Gold and audit tables:
-     * `vacancy_reporting.dim_active_vacancy_rule_parameters`
      * `vacancy_reporting.fact_vacancy_day_vic`
      * `vacancy_reporting.fact_vacancy_interval_vic`
      * `vacancy_reporting.stg_keys_vic`
@@ -128,7 +129,7 @@ Pipeline activity order:
 2. `Run Silver Standardization`
    - Notebook: `vac_reporting_vic_silver_notebook`
    - Dependency: succeeds only after Bronze succeeds.
-   - Purpose: standardize source types and write the Silver tables.
+   - Purpose: publish active governed rules, apply source date corrections, standardize source types, and write the Silver tables.
 3. `Run Dimensions`
    - Notebook: `vac_reporting_vic_dimensions_notebook`
    - Dependency: succeeds only after Silver succeeds.
@@ -175,7 +176,7 @@ Recommended notebook flow:
 4. Change `ACTION` to `"apply_rule_updates"`.
 5. Set `EXECUTE_CHANGES = True`.
 6. Run the maintenance notebook.
-7. Rerun `../notebooks/vac_reporting_vic_gold_notebook.py`.
+7. Rerun the operational pipeline from Silver onward: `Silver -> Dimensions -> Gold -> semantic model refresh`.
 
 The key rules are:
 
@@ -194,16 +195,16 @@ Expected default behavior:
 - next tenancy start `2026-04-05` becomes vacancy inclusive end `2026-04-04`
 - selected `Vacancy Days` for a report ending `2026-03-31` becomes `89` for a vacancy starting `2026-01-02`, because the current model counts the vacancy start date and therefore uses `MIN(vacancy_end, report_to_date) - vacancy_start + 1`
 
-If the confirmed business rule is that the TechOne source dates are one day behind, set these raw source offset rules to `1` before rerunning the main notebook:
+The confirmed source behavior is that TechOne supplies UTC timestamps. Silver converts them to `Australia/Melbourne`, so keep these additional source offset rules at `0`:
 
 - `property_source_date_offset`
 - `tenancy_source_date_offset`
 - `void_source_date_offset`
 - `keys_source_date_offset`
 
-That shifts the raw dates in the notebook before the vacancy and void interval logic is applied.
+Silver performs the timezone conversion before the property dimension, vacancy, and void interval logic is built. For example, `2026-05-14T14:00:00Z` becomes Melbourne date `2026-05-15` without an additional configured shift.
 
-If the business wants different offsets, change the config table first and rerun the notebook.
+If the business later confirms different offsets, change the config table first and rerun the pipeline from Silver onward.
 
 ## Step 4: Validate The Data Outputs
 

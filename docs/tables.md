@@ -526,7 +526,7 @@ This is currently enough to explain how vacancy boundaries were derived. A futur
 
 - Date correction offsets are applied in the notebook through governed Fabric parameters.
 - Raw source date shifts are controlled separately for `Property`, `Tenancy`, `Void`, and `Keys`.
-- If the confirmed TechOne rule is that source dates are one day behind, set `property_source_date_offset`, `tenancy_source_date_offset`, `void_source_date_offset`, and `keys_source_date_offset` to `1`.
+- TechOne date-time values arrive as UTC timestamps and Silver converts them to `Australia/Melbourne`; the confirmed additional offsets for Property, Tenancy, Void, and Keys are therefore `0`.
 - The notebook stores vacancy intervals using an exclusive end boundary for reliable day counting.
 - The report uses the daily fact table as the main date-filtering layer.
 - `dim_property_vic[is_standard_address]` is derived from `PROPERTYSHORTADDRESS` and is intended to replace report-time address text searches. It does not filter source rows in the notebook.
